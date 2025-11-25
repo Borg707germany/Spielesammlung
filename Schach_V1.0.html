@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<title>Schachspiel - Vollversion</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  body { font-family: system-ui, Arial, sans-serif; display:flex; flex-direction:column; align-items:center; margin:0; padding:20px; background:#f6f6f6; }
+  #chessboard { display:grid; grid-template-columns: repeat(8, 60px); grid-template-rows: repeat(8, 60px); gap:0; margin-top:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
+  .square { width:60px; height:60px; display:flex; justify-content:center; align-items:center; font-size:32px; cursor:pointer; user-select:none; }
+  .light { background:#f0d9b5; color:#222; }
+  .dark { background:#b58863; color:#fff; }
+  .selected { outline:3px solid #ffd54f; z-index:2; }
+  .move-option { outline:3px solid #8bc34a; }
+  //#start-screen,#setup-screen { display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:24px; }
+  /* --- Startscreen schöner gestalten --- */
+  #start-screen {
+    background: linear-gradient(135deg, #f0d9b5, #b58863); /* Schachbrett-Farben */
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    text-align: center;
+    animation: fadeIn 1s ease; /* sanftes Einblenden */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    
+  }
+
+  #start-screen h1 {
+    font-family: 'Georgia', serif; /* elegante Schrift */
+    font-size: 2.2em;
+    margin-bottom: 20px;
+    color: #3e2723;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+  }
+
+  #start-screen button {
+    background: #fff;
+    border: 2px solid #3e2723;
+    border-radius: 8px;
+    padding: 12px 24px;
+    margin: 10px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+
+  #start-screen button:hover {
+    background: #ffd54f; /* Goldgelb beim Hover */
+    transform: scale(1.05);
+  }
+
+  #start-screen button:active {
+    transform: scale(0.95);
+  }
+
+  /* sanfte Einblend-Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- Setup-Screen schöner gestalten --- */
+  #setup-screen {
+    background: linear-gradient(135deg, #e0e0e0, #ffffff);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: fadeIn 0.8s ease;
+  }
+
+  #setup-screen label {
+    font-weight: bold;
+    color: #3e2723;
+    margin: 12px 0;
+    display: block;
+  }
+
+  #setup-screen input,
+  #setup-screen select {
+    padding: 8px 12px;
+    border: 2px solid #3e2723;
+    border-radius: 6px;
+    font-size: 1em;
+    margin-top: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  #setup-screen button {
+    background: #fff;
+    border: 2px solid #3e2723;
+    border-radius: 8px;
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+
+  #setup-screen button:hover {
+    background: #8bc34a; /* Grün als Bestätigung */
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  #setup-screen button:active {
+    transform: scale(0.95);
+  }
+
+  #info-bar { display:flex; gap:12px; align-items:center; margin-top:12px; }
+  input,select,button { font-size:16px; padding:8px; }
+  
+  /* --- Info-Bar Styling --- */
+  #info-bar {
+    background: #3e2723; /* dunkles Braun, passend zum Schachbrett */
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-weight: bold;
+  }
+
+  #info-bar button {
+    background: #fff;
+    border: 2px solid #3e2723;
+    border-radius: 6px;
+    padding: 6px 12px;
+    margin-left: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  #info-bar button:hover {
+    background: #ffd54f;
+    transform: scale(1.05);
+  }
+
+  #log { margin-top:16px; max-width:480px; width:100%; background:#fff; padding:8px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+  #moves { font-family:monospace; white-space:pre-wrap; word-break:break-word; }
+  .modal { position:fixed; left:0; right:0; top:0; bottom:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); }
+  .modal-box { background:#fff; padding:16px; border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,0.2); }
+  
+  /* --- Modals schöner gestalten --- */
+  .modal-box {
+    background: #fff8e1; /* helles Beige */
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .modal-box button {
+    background: #fff;
+    border: 2px solid #3e2723;
+    border-radius: 8px;
+    padding: 10px 20px;
+    margin: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .modal-box button:hover {
+    background: #8bc34a; /* Grün für Bestätigung */
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  //.promo-buttons button { margin:6px; }
+  /* --- Promotion Buttons schöner gestalten --- */
+  .promo-buttons button {
+    font-size: 1.6em; /* große Symbole */
+    padding: 12px 20px;
+    margin: 8px;
+    border: 2px solid #3e2723;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  }
+
+  .promo-buttons button:hover {
+    background: #ffd54f;
+    transform: scale(1.1);
+  }
+
+  .promo-buttons button:active {
+    transform: scale(0.95);
+  }
+
+#main-area { display:flex; gap:16px; align-items:flex-start; margin-top:16px; }
+#log { background:#fff; padding:8px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+/* --- Zugliste schöner gestalten --- */
+#log {
+  background: #fff8e1; /* warmes Beige */
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  font-family: 'Courier New', monospace;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+#log strong {
+  font-size: 1.2em;
+  color: #3e2723;
+  display: block;
+  margin-bottom: 8px;
+}
+
+#moves {
+  max-height:520px; 
+  overflow:auto; 
+  font-size:14px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #212121;
+  padding: 8px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+}
+#board-wrapper { display:flex; justify-content:center; align-items:flex-start; background: #fafafa;  padding: 20px;  border-radius: 12px;  box-shadow: 0 6px 20px rgba(0,0,0,0.2);}
+@media (max-width:800px) {
+  #main-area { flex-direction:column; }
+  #log { width:100%; order:2; }
+  #board-wrapper { order:1; }
+}
+
+/* --- Timer Styling --- */
+#timer {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #ffd54f; /* Goldgelb für Aufmerksamkeit */
+  background: #212121;
+  padding: 4px 10px;
+  border-radius: 6px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* --- Spielstatus Styling --- */
+#status {
+  font-size: 1.2em;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 6px;
+  margin-left: 12px;
+  transition: all 0.3s ease;
+}
+
+/* verschiedene Statusfarben */
+#status.check {
+  background: #ffeb3b; /* Gelb für Schach */
+  color: #000;
+}
+
+#status.mate {
+  background: #d32f2f; /* Rot für Schachmatt */
+  color: #fff;
+}
+
+#status.draw {
+  background: #607d8b; /* Grau für Remis */
+  color: #fff;
+}
+
+#endgame-symbol {
+  font-size: 3em;
+  margin-bottom: 12px;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+}
+
+#status.timeout {
+  background: #f57c00; /* Orange */
+  color: #fff;
+}
+
+#start-screen > div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.start-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+#board-container {
+  position: relative;
+  display: inline-block;
+}
+
+.ranks {
+  position: absolute;
+  top: 0;
+  left: -15px; /* Abstand links vom Brett */
+  display: grid;
+  grid-template-rows: repeat(8, 60px);
+  height: 480px; /* 8 Reihen × 60px */
+  font-weight: bold;
+  color: #3e2723;
+}
+
+.ranks span {
+  height: 60px;              /* gleiche Höhe wie ein Feld */
+  display: flex;
+  align-items: flex-end;     /* nach unten ausrichten */
+  justify-content: center;   /* horizontal mittig */
+  padding-bottom: 4px;       /* kleiner Abstand vom unteren Rand */
+  font-size: 16px;
+}
+
+.files {
+  display: grid;
+  grid-template-columns: repeat(8, 60px);
+  width: 480px; /* 8 Spalten × 60px */
+  margin-top: 4px;
+  text-align: center;
+  font-weight: bold;
+  color: #3e2723;
+}
+
+</style>
+</head>
+<body>
+
+<!-- Start -->
+<div id="start-screen">
+  <h1>♔ Willkommen zum Schachspiel ♚</h1>
+  <div class="start-buttons">
+    <br> <!-- optionaler manueller Zeilenumbruch -->
+    <button id="one-player">👤 1 Spieler</button>
+    <button id="two-player">👥 2 Spieler lokal</button>
+  </div>
+</div>
+
+
+
+<!-- Setup -->
+<div id="setup-screen" style="display:none;">
+  <div id="name-fields"></div>
+  <label>Zeit pro Zug (Sekunden):
+    <select id="time-limit">
+      <option value="0">∞</option>
+      <option value="10">10</option>
+      <option value="30">30</option>
+      <option value="60">60</option>
+    </select>
+  <label>Figuren-Stil:
+    <select id="piece-style">
+      <option value="classic">Klassisch (♔♕♖♗♘♙)</option>
+      <option value="modern">Modern (👑🏰🐴 ...)</option>
+    </select>
+  <label>KI-Schwierigkeit (Tiefe):
+    <select id="ai-depth">
+      <option value="1">Leicht (Tiefe 1)</option>
+      <option value="2" selected>Mittel (Tiefe 2)</option>
+      <option value="3">Schwer (Tiefe 3)</option>
+    </select>
+  </label>
+
+  </label>
+    <div>
+    <button id="start-game">▶️ Spiel starten</button>
+    <button id="back-to-start">↩️ Zurück</button>
+  </div>
+</div>
+
+<!-- Info -->
+<div id="info-bar" style="display:none;">
+  <div id="player-turn"></div>
+  <div id="timer"></div>
+  <div id="status" style="color:#d32f2f;font-weight:bold;"></div>
+  <div style="margin-left:12px;">
+    <button id="undo-btn">Undo</button>
+    <button id="redo-btn">Redo</button>
+    <button id="restart-btn">Neustart</button>
+  </div>
+</div>
+
+
+<!-- Hauptbereich: Zugliste links, Brett rechts -->
+<div id="main-area" style="display:none; gap:16px; align-items:flex-start; margin-top:16px;">
+  <!-- Zugliste (links) -->
+  <div id="log" style="width:220px; min-width:160px;">
+    <div><strong>Zugliste</strong></div>
+    <div id="moves" style="margin-top:8px; font-family:monospace; white-space:pre-wrap; word-break:break-word; max-height:520px; overflow:auto;"></div>
+  </div>
+
+ <!-- Brett (rechts) -->
+<div id="board-wrapper" style="flex:1;">
+  <div id="board-container">
+    <!-- Reihen-Beschriftung links -->
+    <div class="ranks">
+      <span>8</span><span>7</span><span>6</span><span>5</span>
+      <span>4</span><span>3</span><span>2</span><span>1</span>
+    </div>
+
+    <!-- Brett -->
+    <div id="chessboard"></div>
+
+    <!-- Spalten-Beschriftung unten -->
+    <div class="files">
+      <span>a</span><span>b</span><span>c</span><span>d</span>
+      <span>e</span><span>f</span><span>g</span><span>h</span>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Promotion Modal -->
+<div id="promo-modal" style="display:none;" class="modal">
+  <div class="modal-box">
+    <div style="margin-bottom:12px; font-weight:bold;">Wähle Figur zur Umwandlung:</div>
+    <div class="promo-buttons">
+      <button data-piece="Q">♕ Dame</button>
+      <button data-piece="R">♖ Turm</button>
+      <button data-piece="B">♗ Läufer</button>
+      <button data-piece="N">♘ Springer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Game End Modal -->
+<div id="endgame-modal" style="display:none;" class="modal">
+  <div class="modal-box">
+    <div id="endgame-symbol" style="font-size:3em; margin-bottom:12px;"></div>
+    <div id="endgame-message"></div>
+      <button id="restart-same">Neues Spiel mit gleichen Einstellungen</button>
+      <button id="back-to-selection">Zurück zur Spielauswahl</button>
+  </div>
+</div>
+
+<script>
+/* -----------------------
+   Grundzustand & UI
+   ----------------------- */
+let redoStack = [];
+let branchLocked = false; // wenn true: verhindert neue Züge nach Undo eines KI-Zugs
+const undoBtn = document.getElementById('undo-btn');
+const redoBtn = document.getElementById('redo-btn');
+const restartBtn = document.getElementById('restart-btn');
+
+const startScreen = document.getElementById('start-screen');
+const setupScreen = document.getElementById('setup-screen');
+const nameFields = document.getElementById('name-fields');
+const chessboard = document.getElementById('chessboard');
+const infoBar = document.getElementById('info-bar');
+const playerTurn = document.getElementById('player-turn');
+const timerDisplay = document.getElementById('timer');
+const timeLimitSelect = document.getElementById('time-limit');
+const movesDiv = document.getElementById('moves');
+const logBox = document.getElementById('log');
+const statusDiv = document.getElementById('status');
+const promoModal = document.getElementById('promo-modal');
+
+let mode = null;
+let players = { white: "Weiß", black: "Schwarz" };
+let currentTurn = 'w';
+let timeLimit = 0;
+let timerInterval = null;
+let timeLeft = 0;
+let pieceStyle = "classic"; // Standard
+let aiDepth = 2; // Standardtiefe
+
+// Figuren-Symbole
+const piecesClassic = {
+  w: { R: "♖", N: "♘", B: "♗", Q: "♕", K: "♔", P: "♙" },
+  b: { R: "♜", N: "♞", B: "♝", Q: "♛", K: "♚", P: "♟" }
+};
+
+const piecesModern = {
+  w: { R: "🏰", N: "🐴", B: "⛪", Q: "👑", K: "🤴", P: "👤" },
+  b: { R: "🗼", N: "🐎", B: "🏯", Q: "🧛‍♀️", K: "🧛‍♂️", P: "👥" }
+};
+
+
+// Anfangsbrett (8x8)
+let board = [
+  ['bR','bN','bB','bQ','bK','bB','bN','bR'],
+  ['bP','bP','bP','bP','bP','bP','bP','bP'],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['','','','','','','',''],
+  ['wP','wP','wP','wP','wP','wP','wP','wP'],
+  ['wR','wN','wB','wQ','wK','wB','wN','wR']
+];
+
+// Spielzustand (Flags)
+let state = {
+  whiteCanCastleK: true,
+  whiteCanCastleQ: true,
+  blackCanCastleK: true,
+  blackCanCastleQ: true,
+  enPassantTarget: null, // [r,c]
+  halfmoveClock: 0,
+  fullmoveNumber: 1,
+  history: [] // Array von {board, state, moveNotation}
+};
+
+let selectedSquare = null;
+let legalMovesCache = {}; // optional cache für aktuell selektierte Figur
+let promotionPending = null; // {from:[r,c], to:[r,c], color}
+let gameOver = false; // zeigt an, ob das Spiel beendet ist
+
+/* -----------------------
+   UI: Start / Setup  (Einheitliche, fehlerfreie Version)
+   ----------------------- */
+const oneBtn = document.getElementById('one-player');
+const twoBtn = document.getElementById('two-player');
+const backBtn = document.getElementById('back-to-start');
+const startBtn = document.getElementById('start-game');
+
+if (backBtn) backBtn.addEventListener('click', () => {
+  // Sicher zurück zum Startbildschirm
+  setupScreen.style.display = 'none';
+  startScreen.style.display = 'flex';
+  // Reset mode so user must pick again (optional)
+  mode = null;
+});
+
+// Helpers für Endspiel-Modal
+const endgameModal = document.getElementById('endgame-modal');
+const endgameMessage = document.getElementById('endgame-message');
+const restartSameBtn = document.getElementById('restart-same');
+const startButtons = document.querySelector('#start-screen > div');
+if (startButtons) {
+  startButtons.style.display = 'flex';
+  startButtons.style.flexDirection = 'column';
+  startButtons.style.alignItems = 'center';
+  startButtons.style.gap = '12px';
+}
+
+
+//*Neu für Timer Spielende
+function setStatus(type, text) {
+  // Text aktualisieren
+  statusDiv.textContent = text || '';
+
+  // Klassen zurücksetzen und Status-Klasse setzen
+  statusDiv.className = '';         // entfernt alle Klassen
+  statusDiv.classList.add(type);    // z. B. 'timeout', 'mate', 'draw', 'check'
+}
+
+function showEndgameModal(message, type) {
+  const modal = document.getElementById('endgame-modal');
+  const msgDiv = document.getElementById('endgame-message');
+  const symbolDiv = document.getElementById('endgame-symbol');
+
+  msgDiv.textContent = message;
+
+  // Symbol je nach Typ setzen
+  if (type === 'win') {
+    symbolDiv.textContent = "♔"; // König für Sieg
+  } else if (type === 'draw') {
+    symbolDiv.textContent = "🤝"; // Handschlag für Remis
+  } else if (type === 'mate') {
+    symbolDiv.textContent = "⚔️"; // Schwerter für Schachmatt
+  } else if (type === 'timeout') {
+    symbolDiv.textContent = "⏰"; // Uhr-Symbol für Zeitablauf
+  } else if (type === 'restart') {
+    symbolDiv.textContent = "🔄";
+  } else {
+    symbolDiv.textContent = "";
+  }
+
+  modal.style.display = 'block';
+}
+
+function hideEndgameModal(){
+  endgameModal.style.display = 'none';
+}
+
+// Button: Neues Spiel mit gleichen Einstellungen
+restartSameBtn.addEventListener('click', () => {
+  hideEndgameModal();
+  // reset, behalte players, mode und timeLimit
+  redoStack = [];
+  resetGame();
+  updateUndoRedoButtons();
+  gameOver = false;
+  startGame();
+  // Wenn Computer am Zug ist, triggern
+  maybeTriggerAI();
+});
+
+// Button: Zurück zur Auswahl (Startscreen)
+const backToSelectionBtn = document.getElementById('back-to-selection');
+backToSelectionBtn.addEventListener('click', () => {
+  hideEndgameModal();
+  // Reset Spielzustand, zurück zur Auswahl
+  redoStack = [];
+  resetGame();
+  updateUndoRedoButtons();
+  // Verstecke main UI, zeige start screen
+  document.getElementById('main-area').style.display = 'none';
+  infoBar.style.display = 'none';
+  startScreen.style.display = 'flex';
+  
+  // Layout-Reset für Startscreen-Buttons
+  const startButtons = document.querySelector('.start-buttons');
+  if (startButtons) {
+    startButtons.style.display = 'flex';
+    startButtons.style.flexDirection = 'column';
+    startButtons.style.alignItems = 'center';
+    startButtons.style.gap = '12px';
+  }
+});
+
+function showSetup(){
+  // Verstecke Startscreen und zeige Setup
+  if (startScreen) startScreen.style.display = 'none';
+  if (setupScreen) setupScreen.style.display = 'flex';
+
+  // Fülle Name-Felder abhängig vom Modus
+  if (nameFields){
+    if (mode === 'local'){
+      nameFields.innerHTML = '<input id="white-name" placeholder="Spieler Weiß" />' +
+                             '<input id="black-name" placeholder="Spieler Schwarz" />';
+    } else {
+      // Singleplayer: Name + Farbauswahl
+      nameFields.innerHTML =
+        '<input id="player-name" placeholder="Dein Name" />' +
+        '<div style="margin-top:8px;">' +
+          '<label style="margin-right:8px;"><input type="radio" name="player-color" value="white" checked /> Weiß (du)</label>' +
+          '<label><input type="radio" name="player-color" value="black" /> Schwarz (du)</label>' +
+        '</div>' +
+        '<p style="margin-top:8px;">Du spielst gegen den Computer</p>';
+    }
+  }
+}
+
+
+// Klick-Handler: 1 Spieler
+if (oneBtn) oneBtn.addEventListener('click', () => {
+  mode = 'single';
+  showSetup();
+});
+
+// Klick-Handler: 2 Spieler lokal
+if (twoBtn) twoBtn.addEventListener('click', () => {
+  mode = 'local';
+  showSetup();
+});
+
+// Start-Button: Spiel wirklich starten
+if (startBtn) startBtn.addEventListener('click', () => {
+  timeLimit = parseInt(timeLimitSelect.value) || 0;
+  
+  // Figurenstil auslesen
+  const pieceStyleSelect = document.getElementById('piece-style');
+  pieceStyle = pieceStyleSelect ? pieceStyleSelect.value : "classic";
+  
+  const aiDepthSelect = document.getElementById('ai-depth');
+  aiDepth = aiDepthSelect ? parseInt(aiDepthSelect.value) : 2;
+
+  if (mode === 'local') {
+    const wInput = document.getElementById('white-name');
+    const bInput = document.getElementById('black-name');
+    players.white = wInput && wInput.value.trim() ? wInput.value.trim() : 'Weiß';
+    players.black = bInput && bInput.value.trim() ? bInput.value.trim() : 'Schwarz';
+  } else if (mode === 'single') {
+    const nameInput = document.getElementById('player-name');
+    const chosenName = nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'Spieler';
+    const chosenColor = document.querySelector('input[name="player-color"]:checked')?.value || 'white';
+    if (chosenColor === 'white') {
+      players.white = chosenName;
+      players.black = 'Computer';
+    } else {
+      players.white = 'Computer';
+      players.black = chosenName;
+    }
+  } else {
+    players.white = 'Weiß';
+    players.black = 'Schwarz';
+  }
+
+  // Sichtbarkeit: Setup verbergen, Info und main-area zeigen
+  setupScreen.style.display = 'none';
+  startScreen.style.display = 'none';
+  infoBar.style.display = 'flex';
+  document.getElementById('main-area').style.display = 'flex';
+
+  // Reset / Start
+  resetGame();
+  startGame();
+
+  // Falls Computer am Zug ist (z.B. du hast Schwarz gewählt), AI auslösen
+  maybeTriggerAI();
+});
+
+// Hilfsfunktion zum Klonen (falls nicht vorhanden)
+function cloneBoard(b){ return b.map(row => row.slice()); }
+function cloneState(s){
+  return {
+    whiteCanCastleK: s.whiteCanCastleK,
+    whiteCanCastleQ: s.whiteCanCastleQ,
+    blackCanCastleK: s.blackCanCastleK,
+    blackCanCastleQ: s.blackCanCastleQ,
+    enPassantTarget: s.enPassantTarget ? s.enPassantTarget.slice() : null,
+    halfmoveClock: s.halfmoveClock,
+    fullmoveNumber: s.fullmoveNumber
+  };
+}
+
+// Buttons Event-Handler
+if (undoBtn) undoBtn.addEventListener('click', undoMove);
+if (redoBtn) redoBtn.addEventListener('click', redoMove);
+if (restartBtn) restartBtn.addEventListener('click', () => {
+  showEndgameModal("Möchtest du neu starten?", "restart");
+});
+
+// Update Button-Status
+function updateUndoRedoButtons(){
+  if (undoBtn) undoBtn.disabled = !(state.history && state.history.length > 0);
+  if (redoBtn) redoBtn.disabled = (redoStack.length === 0);
+}
+
+// Undo
+function undoMove(){
+  if (!state.history || state.history.length === 0) {
+    alert('Kein Zug zum Rückgängig machen.');
+    return;
+  }
+  const last = state.history.pop();
+
+  // Speichere aktuellen Zustand im redoStack inklusive currentTurn und ob es ein KI-Zug war
+  redoStack.push({ board: cloneBoard(board), state: cloneState(state), turn: currentTurn, moverIsAI: last.moverIsAI });
+
+  // Stelle Board und state wieder her
+  board = last.board.map(row => row.slice());
+  state.whiteCanCastleK = last.state.whiteCanCastleK;
+  state.whiteCanCastleQ = last.state.whiteCanCastleQ;
+  state.blackCanCastleK = last.state.blackCanCastleK;
+  state.blackCanCastleQ = last.state.blackCanCastleQ;
+  state.enPassantTarget = last.state.enPassantTarget ? last.state.enPassantTarget.slice() : null;
+  state.halfmoveClock = last.state.halfmoveClock;
+  state.fullmoveNumber = last.state.fullmoveNumber;
+
+  // Restore turn from history entry (robust)
+  currentTurn = last.turn;
+
+  // Wenn der entfernte Zug von der KI war, sperre neue menschliche Züge (keine Verzweigung erlauben)
+  if (last.moverIsAI) {
+    branchLocked = true;
+    statusDiv.textContent = 'Variante gesperrt: Redo oder Freigeben, um weiterzuspielen';
+  } else {
+    branchLocked = false;
+  }
+
+  generateBoard();
+  updateTurnDisplay();
+  updateMoveLog();
+  statusDiv.textContent = '';
+  startTurnTimer();
+  updateUndoRedoButtons();
+}
+
+// Redo
+function redoMove(){
+  if (redoStack.length === 0) {
+    alert('Kein Zug zum Wiederherstellen.');
+    return;
+  }
+  const next = redoStack.pop();
+  // Speichere aktuellen Zustand in history, damit Undo weiterhin funktioniert
+  state.history.push({ board: cloneBoard(board), state: cloneState(state), move: null, turn: currentTurn, moverIsAI: next.moverIsAI });
+
+  board = next.board.map(row => row.slice());
+  state.whiteCanCastleK = next.state.whiteCanCastleK;
+  state.whiteCanCastleQ = next.state.whiteCanCastleQ;
+  state.blackCanCastleK = next.state.blackCanCastleK;
+  state.blackCanCastleQ = next.state.blackCanCastleQ;
+  state.enPassantTarget = next.state.enPassantTarget ? next.state.enPassantTarget.slice() : null;
+  state.halfmoveClock = next.state.halfmoveClock;
+  state.fullmoveNumber = next.state.fullmoveNumber;
+
+  // Restore the turn from redo entry
+  currentTurn = next.turn;
+
+  // Wenn wir einen Redo eines KI-Zugs ausführen, entsperren wir branch
+  branchLocked = false;
+
+  generateBoard();
+  updateTurnDisplay();
+  updateMoveLog();
+  statusDiv.textContent = '';
+  startTurnTimer();
+  updateUndoRedoButtons();
+}
+
+/* -----------------------
+   Spielstart / Reset
+   ----------------------- */
+function resetGame(){
+  board = [
+    ['bR','bN','bB','bQ','bK','bB','bN','bR'],
+    ['bP','bP','bP','bP','bP','bP','bP','bP'],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['','','','','','','',''],
+    ['wP','wP','wP','wP','wP','wP','wP','wP'],
+    ['wR','wN','wB','wQ','wK','wB','wN','wR']
+  ];
+  state = {
+    whiteCanCastleK: true,
+    whiteCanCastleQ: true,
+    blackCanCastleK: true,
+    blackCanCastleQ: true,
+    enPassantTarget: null,
+    halfmoveClock: 0,
+    fullmoveNumber: 1,
+    history: []
+  };
+  currentTurn = 'w';
+  selectedSquare = null;
+  promotionPending = null;
+  statusDiv.textContent = '';
+  movesDiv.textContent = '';
+  gameOver = false;
+  redoStack = [];
+  branchLocked = false;
+  clearInterval(timerInterval); // Timer stoppen
+  generateBoard(); // Brett neu zeichnen
+  updateTurnDisplay(); // Spieleranzeige aktualisieren
+}
+
+/* -----------------------
+   Board Rendering
+   ----------------------- */
+function generateBoard(){
+  chessboard.innerHTML = '';
+  for (let r=0;r<8;r++){
+    for (let c=0;c<8;c++){
+      const sq = document.createElement('div');
+      sq.className = 'square ' + ((r+c)%2===0 ? 'light' : 'dark');
+      sq.dataset.row = r;
+      sq.dataset.col = c;
+      const p = board[r][c];
+      if (p){
+        const color = p[0], type = p[1];
+        const activeSet = (pieceStyle === "modern") ? piecesModern : piecesClassic;
+        sq.textContent = activeSet[color][type];
+        // Weiße Figuren = weiß, Schwarze Figuren = schwarz (ohne Anpassung an Feldfarbe)
+        sq.style.color = color === 'w' ? '#ffffff' : '#000000';
+      } else {
+        // Stelle sicher, dass leere Felder keine Inline-Farbe erben
+        sq.style.color = '';
+      }
+      sq.addEventListener('click', ()=>handleClick(sq));
+      chessboard.appendChild(sq);
+    }
+  }
+}
+
+/* -----------------------
+   Click Handling & Move-Flow
+   ----------------------- */
+function handleClick(square){
+  if (gameOver) return;  // keine Eingaben mehr nach Spielende
+  // Wenn Promotion offen: ignorieren
+  if (promotionPending) return;
+
+  // Wenn branchLocked true ist, blockiere neue menschliche Züge
+  if (branchLocked) {
+    // Erlaube nur Redo, nicht neue Züge — zeige Hinweis
+    //alert('Du hast einen KI-Zug rückgängig gemacht. Rufe Redo auf oder wähle "Variante freigeben", um neue Züge zu machen.');
+    statusDiv.textContent = 'Variante gesperrt: Redo oder Freigeben';
+    return;
+  }
+
+  const r = +square.dataset.row, c = +square.dataset.col;
+  const piece = board[r][c];
+
+  // Klick auf hervorgehobenes Ziel
+  if (square.classList.contains('move-option') && selectedSquare){
+    const fr = +selectedSquare.dataset.row, fc = +selectedSquare.dataset.col;
+    makeMove([fr,fc],[r,c]);
+    clearSelection();
+    return;
+  }
+
+  // Klick auf eigene Figur -> Auswahl und Highlight legaler Züge
+  if (piece && piece[0] === currentTurn){
+    clearSelection();
+    selectedSquare = square;
+    square.classList.add('selected');
+    const legal = getLegalMoves(r,c,board,state);
+    legalMovesCache = { from:[r,c], moves: legal };
+    for (let m of legal){
+      const sq = document.querySelector(`.square[data-row="${m[0]}"][data-col="${m[1]}"]`);
+      if (sq) sq.classList.add('move-option');
+    }
+    return;
+  }
+
+  // Klick auf anderes Feld -> deselektieren
+  if (selectedSquare){
+    clearSelection();
+  }
+}
+
+function clearSelection(){
+  document.querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'));
+  document.querySelectorAll('.move-option').forEach(el=>el.classList.remove('move-option'));
+  selectedSquare = null;
+  legalMovesCache = {};
+}
+
+/* -----------------------
+   Move-Generierung
+   - getPseudoMoves liefert alle erreichbaren Felder (auch wenn blockiert)
+   - getLegalMoves filtert jene, die eigenen König im Schach lassen
+   ----------------------- */
+
+function inBounds(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
+
+function cloneBoard(b){
+  return b.map(row => row.slice());
+}
+
+function cloneState(s){
+  return {
+    whiteCanCastleK: s.whiteCanCastleK,
+    whiteCanCastleQ: s.whiteCanCastleQ,
+    blackCanCastleK: s.blackCanCastleK,
+    blackCanCastleQ: s.blackCanCastleQ,
+    enPassantTarget: s.enPassantTarget ? s.enPassantTarget.slice() : null,
+    halfmoveClock: s.halfmoveClock,
+    fullmoveNumber: s.fullmoveNumber
+  };
+}
+
+function getPseudoMoves(r,c, piece, b, st){
+  const color = piece[0], type = piece[1];
+  const moves = [];
+
+  const add = (nr,nc,stopIfOccupied=true) => {
+    if (!inBounds(nr,nc)) return stopIfOccupied ? false : undefined;
+    moves.push([nr,nc]);
+    const target = b[nr][nc];
+    return !target;
+  };
+
+  if (type === 'P'){
+    const dir = color === 'w' ? -1 : 1;
+    // Vorwärts (nur leeres Feld)
+    const fr = r + dir;
+    if (inBounds(fr,c) && !b[fr][c]) moves.push([fr,c]);
+    // Doppelzug
+    const startRow = color === 'w' ? 6 : 1;
+    if (r === startRow && inBounds(r+2*dir,c) && !b[r+dir][c] && !b[r+2*dir][c]) moves.push([r+2*dir,c]);
+    // Schlagzüge (auch en passant)
+    for (let dc of [-1,1]){
+      const nr = r + dir, nc = c + dc;
+      if (inBounds(nr,nc) && b[nr][nc] && b[nr][nc][0] !== color) moves.push([nr,nc]);
+      // en passant: Ziel ist diagonales Feld behind pawn that moved two
+      if (st && st.enPassantTarget){
+        const [er,ec] = st.enPassantTarget;
+        if (er === nr && ec === nc) moves.push([nr,nc]);
+      }
+    }
+    return moves;
+  }
+
+  if (type === 'N'){
+    const deltas = [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
+    for (let [dr,dc] of deltas){
+      const nr=r+dr,nc=c+dc;
+      if (!inBounds(nr,nc)) continue;
+      if (!b[nr][nc] || b[nr][nc][0] !== color) moves.push([nr,nc]);
+    }
+    return moves;
+  }
+
+  if (type === 'K'){
+    for (let dr=-1; dr<=1; dr++) for (let dc=-1; dc<=1; dc++){
+      if (dr===0 && dc===0) continue;
+      const nr=r+dr,nc=c+dc;
+      if (!inBounds(nr,nc)) continue;
+      if (!b[nr][nc] || b[nr][nc][0] !== color) moves.push([nr,nc]);
+    }
+    // Rochade: nur als mögliches Ziel (prüfungen später)
+    if (color === 'w'){
+      if (st.whiteCanCastleK) moves.push([7,6]);
+      if (st.whiteCanCastleQ) moves.push([7,2]);
+    } else {
+      if (st.blackCanCastleK) moves.push([0,6]);
+      if (st.blackCanCastleQ) moves.push([0,2]);
+    }
+    return moves;
+  }
+
+  // Schieber (R,B,Q)
+  const straight = [[1,0],[-1,0],[0,1],[0,-1]];
+  const diag = [[1,1],[1,-1],[-1,1],[-1,-1]];
+  if (type === 'R' || type === 'Q'){
+  for (let [dr,dc] of straight){
+    for (let i=1;i<8;i++){
+      const nr = r + dr*i, nc = c + dc*i;
+      if (!inBounds(nr,nc)) break;
+      const target = b[nr][nc];
+      if (!target) {
+        moves.push([nr,nc]);
+      } else {
+        if (target[0] !== color) moves.push([nr,nc]);
+        break;
+      }
+    }
+  }
+}
+
+if (type === 'B' || type === 'Q'){
+  for (let [dr,dc] of diag){
+    for (let i=1;i<8;i++){
+      const nr = r + dr*i, nc = c + dc*i;
+      if (!inBounds(nr,nc)) break;
+      const target = b[nr][nc];
+      if (!target) {
+        moves.push([nr,nc]);
+      } else {
+        if (target[0] !== color) moves.push([nr,nc]);
+        break;
+      }
+    }
+  }
+}
+
+  return moves;
+}
+
+function isCheck(board, state, color) {
+  // König finden
+  let kingPos = null;
+  for (let r=0;r<8;r++){
+    for (let c=0;c<8;c++){
+      if (board[r][c] === color+'K') {
+        kingPos = [r,c];
+      }
+    }
+  }
+  if (!kingPos) return false;
+
+  // Gegnerische Züge prüfen
+  const enemy = (color === 'w') ? 'b' : 'w';
+  for (let r=0;r<8;r++){
+    for (let c=0;c<8;c++){
+      const p = board[r][c];
+      if (p && p[0] === enemy) {
+        const moves = getPseudoMoves(r,c,p,board,state);
+        for (let [mr,mc] of moves){
+          if (mr === kingPos[0] && mc === kingPos[1]) return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function canCastle(board, state, color, side) {
+  const row = (color === 'w') ? 7 : 0;
+  const kingCol = 4;
+  const rookCol = (side === 'K') ? 7 : 0;
+  const targetCol = (side === 'K') ? 6 : 2;
+
+  // 1. König und Turm dürfen sich noch nicht bewegt haben
+  if (color === 'w') {
+    if (side === 'K' && !state.whiteCanCastleK) return false;
+    if (side === 'Q' && !state.whiteCanCastleQ) return false;
+  } else {
+    if (side === 'K' && !state.blackCanCastleK) return false;
+    if (side === 'Q' && !state.blackCanCastleQ) return false;
+  }
+
+  // 2. Felder zwischen König und Turm müssen frei sein
+  const between = (side === 'K') ? [5,6] : [1,2,3];
+  for (let c of between) {
+    if (board[row][c] !== '') return false;
+  }
+
+  // 3. König darf nicht im Schach stehen, nicht durch Schach ziehen, nicht im Schach landen
+  const colsToCheck = (side === 'K') ? [4,5,6] : [4,3,2];
+  for (let c of colsToCheck) {
+    const newBoard = cloneBoard(board);
+    newBoard[row][c] = color+'K';
+    newBoard[row][kingCol] = '';
+    if (isCheck(newBoard,state,color)) return false;
+  }
+
+  return true;
+}
+
+/* Prüft, ob color König im Schach ist */
+function isKingInCheck(b, color, st){
+  let kingPos = null;
+  for (let r=0;r<8;r++) for (let c=0;c<8;c++) if (b[r][c] === color+'K') kingPos=[r,c];
+  if (!kingPos) return true;
+  const opponent = color === 'w' ? 'b' : 'w';
+  for (let r=0;r<8;r++){
+    for (let c=0;c<8;c++){
+      const p = b[r][c];
+      if (!p || p[0] !== opponent) continue;
+      const pseudo = getPseudoMoves(r,c,p,b,st);
+      for (let [mr,mc] of pseudo){
+        if (mr===kingPos[0] && mc===kingPos[1]) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/* getLegalMoves: simuliert Züge und filtert jene, die König im Schach lassen */
+function getLegalMoves(r,c,b,st){
+  const piece = b[r][c];
+  if (!piece) return [];
+  const color = piece[0];
+  const pseudo = getPseudoMoves(r,c,piece,b,st);
+  const legal = [];
+
+  for (let [tr,tc] of pseudo){
+    const b2 = cloneBoard(b);
+    const st2 = cloneState(st);
+
+    // En passant: simulate properly
+    const isEP = piece[1]==='P' && st.enPassantTarget && st.enPassantTarget[0]===tr && st.enPassantTarget[1]===tc && b[tr][tc]==='';
+    if (isEP){
+      b2[tr][tc] = piece;
+      b2[r][c] = '';
+      b2[r][tc] = ''; // remove captured pawn
+    } else if (piece[1]==='K' && Math.abs(tc - c) === 2){
+      // Tentative castle move, but validate later
+      b2[tr][tc] = piece;
+      b2[r][c] = '';
+      if (tc === 6){
+        b2[tr][5] = b[r][7];
+        b2[r][7] = '';
+      } else if (tc === 2){
+        b2[tr][3] = b[r][0];
+        b2[r][0] = '';
+      }
+    } else {
+      // normal move
+      b2[tr][tc] = b2[r][c];
+      b2[r][c] = '';
+    }
+
+    // Update en passant availability
+    st2.enPassantTarget = null;
+    if (piece[1]==='P' && Math.abs(tr - r) === 2){
+      st2.enPassantTarget = [(r+tr)/2, c];
+    }
+
+    // Update castle flags
+    if (piece[1]==='K'){
+      if (color==='w'){ st2.whiteCanCastleK = false; st2.whiteCanCastleQ = false; }
+      else { st2.blackCanCastleK = false; st2.blackCanCastleQ = false; }
+    }
+    if (piece[1]==='R'){
+      if (r===7 && c===7) st2.whiteCanCastleK = false;
+      if (r===7 && c===0) st2.whiteCanCastleQ = false;
+      if (r===0 && c===7) st2.blackCanCastleK = false;
+      if (r===0 && c===0) st2.blackCanCastleQ = false;
+    }
+    // If a rook was captured
+    const captured = b[tr][tc];
+    if (!isEP && captured && captured[1]==='R'){
+      if (tr===7 && tc===7) st2.whiteCanCastleK = false;
+      if (tr===7 && tc===0) st2.whiteCanCastleQ = false;
+      if (tr===0 && tc===7) st2.blackCanCastleK = false;
+      if (tr===0 && tc===0) st2.blackCanCastleQ = false;
+    }
+
+    // Check king safety
+    if (!isKingInCheck(b2, color, st2)){
+      // Additional castle validation: only allow if validateCastling passes
+      if (piece[1]==='K' && Math.abs(tc - c) === 2){
+        if (validateCastling(r, c, tr, tc, b, st)) {
+          legal.push([tr,tc]);
+        }
+      } else {
+        legal.push([tr,tc]);
+      }
+    }
+  }
+  return legal;
+}
+
+/* Validiert zusätzliche Rochade-Bedingungen (Felder frei & nicht angegriffen) */
+function validateCastling(r,c,tr,tc,b,st){
+  const color = b[r][c][0];
+  const row = color==='w'?7:0;
+  // Feld zwischen König und Turm müssen leer sein
+  if (tc === 6){ // kurz
+    if (b[row][5] || b[row][6]) return false;
+    // Felder, die der König durchquert: f (5) und g (6) sowie e (4) (aktuell)
+    const squares = [[row,4],[row,5],[row,6]];
+    for (let [sr,sc] of squares){
+      if (isSquareAttacked(sr,sc,color,b,st)) return false;
+    }
+    return true;
+  } else if (tc === 2){ // lang
+    if (b[row][1] || b[row][2] || b[row][3]) return false;
+    const squares = [[row,4],[row,3],[row,2]];
+    for (let [sr,sc] of squares){
+      if (isSquareAttacked(sr,sc,color,b,st)) return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+/* Prüft, ob ein Feld von Gegner angegriffen wird */
+function isSquareAttacked(sr,sc,color,b,st){
+  const opponent = color==='w' ? 'b' : 'w';
+  for (let r=0;r<8;r++){
+    for (let c=0;c<8;c++){
+      const p = b[r][c];
+      if (!p || p[0] !== opponent) continue;
+      const pseudo = getPseudoMoves(r,c,p,b,st);
+      for (let [mr,mc] of pseudo) if (mr===sr && mc===sc) return true;
+    }
+  }
+  return false;
+}
+
+/* -----------------------
+   Zugsausführung (inkl. Promotion und en passant)
+   ----------------------- */
+function makeMove(from, to, promotionChoice){
+  if (gameOver) return;  // keine Züge mehr nach Spielende
+  const [fr,fc] = from;
+  const [tr,tc] = to;
+  const piece = board[fr][fc];
+  if (!piece) return;
+  const color = piece[0];
+
+  // Speichere für Historie (flach kopieren)
+  const prevBoard = cloneBoard(board);
+  const prevState = cloneState(state);
+
+  // Erkenne besondere Züge (vor Ausführung)
+  const isEP = piece[1]==='P' && state.enPassantTarget && state.enPassantTarget[0]===tr && state.enPassantTarget[1]===tc && board[tr][tc]==='';
+  const isCastle = piece[1]==='K' && Math.abs(tc - fc) === 2;
+
+  // Promotion-Fall: wenn Bauer ans Ende kommt und noch keine Wahl übergeben wurde,
+  // zeige Modal und verschiebe das Brett noch nicht
+  if (piece[1] === 'P' && (tr === 0 || tr === 7) && !promotionChoice) {
+    promotionPending = { from:[fr,fc], to:[tr,tc], color };
+    promoModal.style.display = 'flex';
+    return;
+  }
+
+  // Führe Zug aus (inkl. en passant und Rochade)
+  if (isEP){
+    board[tr][tc] = piece;
+    board[fr][fc] = '';
+    // entferne den geschlagenen Bauern
+    const capR = fr;
+    board[capR][tc] = '';
+  } else if (isCastle){
+    board[tr][tc] = piece;
+    board[fr][fc] = '';
+    if (tc === 6){
+      board[tr][5] = board[tr][7];
+      board[tr][7] = '';
+    } else if (tc === 2){
+      board[tr][3] = board[tr][0];
+      board[tr][0] = '';
+    }
+  } else {
+    board[tr][tc] = board[fr][fc];
+    board[fr][fc] = '';
+  }
+
+  // Falls PromotionChoice übergeben wurde (z. B. aus Modal oder KI): setze umgewandelte Figur
+  if (piece[1] === 'P' && (tr === 0 || tr === 7) && promotionChoice){
+    board[tr][tc] = color + promotionChoice;
+  }
+
+  // Update state flags
+  if (piece[1]==='P' && Math.abs(tr - fr) === 2){
+    state.enPassantTarget = [(fr+tr)/2, fc];
+  } else {
+    state.enPassantTarget = null;
+  }
+
+  if (piece[1]==='K'){
+    if (color==='w'){ state.whiteCanCastleK = false; state.whiteCanCastleQ = false; }
+    else { state.blackCanCastleK = false; state.blackCanCastleQ = false; }
+  }
+  if (piece[1]==='R'){
+    if (fr===7 && fc===7) state.whiteCanCastleK = false;
+    if (fr===7 && fc===0) state.whiteCanCastleQ = false;
+    if (fr===0 && fc===7) state.blackCanCastleK = false;
+    if (fr===0 && fc===0) state.blackCanCastleQ = false;
+  }
+  // Wenn Turm geschlagen wurde, disable deren Castle
+  if (!isEP && prevBoard[tr][tc] && prevBoard[tr][tc][1]==='R'){
+    if (tr===7 && tc===7) state.whiteCanCastleK = false;
+    if (tr===7 && tc===0) state.whiteCanCastleQ = false;
+    if (tr===0 && tc===7) state.blackCanCastleK = false;
+    if (tr===0 && tc===0) state.blackCanCastleQ = false;
+  }
+
+  // Halfmove clock & fullmove number
+  if (piece[1]==='P' || (prevBoard[tr][tc] && prevBoard[tr][tc] !== '')) state.halfmoveClock = 0; else state.halfmoveClock++;
+  if (color === 'b') state.fullmoveNumber++;
+
+  // Push history (vereinfachte Notation)
+  const notation = simpleNotation(prevBoard, from, to, piece);
+  // Bestimme, ob dieser Zug von der KI gemacht wurde
+  const moverIsAI = (mode === 'single') && (
+    (color === 'w' && players.white === 'Computer') ||
+    (color === 'b' && players.black === 'Computer')
+    );
+    state.history.push({ board: prevBoard, state: prevState, move: notation, moverIsAI: moverIsAI, turn: currentTurn });
+
+
+  // Neuer Zug: redo-Stack invalidieren
+  redoStack = [];
+  updateUndoRedoButtons();
+
+  // Wechsel des Zuges
+  currentTurn = currentTurn === 'w' ? 'b' : 'w';
+
+  // Nach Zug: Update UI, Timer, Log und Spielendprüfung
+  updateTurnDisplay();
+  generateBoard();
+  clearSelection();
+  startTurnTimer();
+  updateMoveLog();
+  checkGameEnd();
+  checkGameStatus();
+
+  // Mögliche AI auslösen
+  maybeTriggerAI();
+}
+
+function checkGameStatus(){
+  const enemy = (currentTurn === 'w') ? 'b' : 'w';
+  let movesAvailable = [];
+
+  for (let r=0;r<8;r++){
+    for (let c=0;c<8;c++){
+      const p = board[r][c];
+      if (p && p[0] === enemy){
+        const legal = getLegalMoves(r,c,board,state);
+        if (legal.length > 0) movesAvailable.push(...legal);
+      }
+    }
+  }
+
+  if (isCheck(board,state,enemy)){
+    if (movesAvailable.length === 0){
+      setStatus('mate','Schachmatt!');
+      showEndgameModal(enemy==='w' ? players.black+' gewinnt!' : players.white+' gewinnt!', 'mate');
+      gameOver = true;
+    } else {
+      setStatus('check','Schach!');
+    }
+  } else {
+    if (movesAvailable.length === 0){
+      setStatus('draw','Patt – Remis!');
+      showEndgameModal('Unentschieden durch Patt', 'draw');
+      gameOver = true;
+    }
+  }
+}
+
+/* Promotion Modal Buttons */
+promoModal.addEventListener('click', (e)=>{
+  if (e.target.dataset && e.target.dataset.piece){
+    const choice = e.target.dataset.piece;
+    if (promotionPending){
+      const { from, to } = promotionPending;
+      promotionPending = null;
+      promoModal.style.display = 'none';
+      makeMove(from, to, choice);
+    }
+  } else {
+    // Klick außerhalb Buttons -> ignore
+  }
+});
+
+/* -----------------------
+   Einfacher Notations-Generator (für Move-Log)
+   ----------------------- */
+function simpleNotation(prevBoard, from, to, piece){
+  const [fr,fc]=from, [tr,tc]=to;
+  const cols = ['a','b','c','d','e','f','g','h'];
+  const move = cols[fc] + (8-fr) + (cols[tc] + (8-tr));
+  // rudimentär: x wenn capture
+  const capture = prevBoard[tr][tc] && prevBoard[tr][tc] !== '';
+  const prom = (piece[1]==='P' && (tr===0 || tr===7)) ? '=Q' : '';
+  return (capture ? 'x' : '-') + move + prom;
+}
+
+function updateMoveLog(){
+  let text = '';
+  for (let i=0;i<state.history.length;i++){
+    if (i%2===0) text += ((Math.floor(i/2)+1)+'. ');
+    text += state.history[i].move + ' ';
+  }
+  movesDiv.textContent = text;
+}
+
+/* -----------------------
+   Endbedingungen prüfen
+   ----------------------- */
+function checkGameEnd(){
+  const color = currentTurn;
+  // Sammele alle legalen Züge für aktuelle Seite
+  let anyLegal = false;
+  for (let r=0;r<8 && !anyLegal;r++){
+    for (let c=0;c<8;c++){
+      const p = board[r][c];
+      if (p && p[0]===color){
+        const legal = getLegalMoves(r,c,board,state);
+        if (legal.length>0){ anyLegal = true; break; }
+      }
+    }
+  }
+  const inCheck = isKingInCheck(board, color, state);
+  if (!anyLegal){
+    if (inCheck){
+      statusDiv.textContent = (color==='w' ? players.white : players.black) + ' ist schachmatt!';
+      showEndgameModal('Schachmatt: ' + (color==='w' ? players.white : players.black) + ' hat verloren.', "mate");
+    } else {
+      statusDiv.textContent = 'Patt (Unentschieden)';
+      showEndgameModal('Patt: Unentschieden.', "draw");
+      
+      //showEndgameModal("Zeit abgelaufen: Schwarz hat verloren.", "win");
+
+      
+    }
+
+  } else {
+    statusDiv.textContent = inCheck ? 'Schach!' : '';
+  }
+}
+
+/* -----------------------
+   Simple AI (minimax mit Materialbewertung)
+   ----------------------- */
+
+// Materialwerte
+const pieceValue = { K: 900, Q: 9, R: 5, B: 3, N: 3, P: 1 };
+
+// Bewerte das Brett aus Sicht von 'w' (positiv = Vorteil Weiß)
+function evaluateBoard(board) {
+  const values = { P:1, N:3, B:3, R:5, Q:9, K:0 };
+  let score = 0;
+
+  for (let r=0;r<8;r++){
+    for (let c=0;c<8;c++){
+      const p = board[r][c];
+      if (p){
+        let val = values[p[1]];
+
+        // Materialwert
+        score += (p[0]==='w') ? val : -val;
+
+        // Bonus für Zentrumskontrolle (d4, e4, d5, e5)
+        if (p[1] !== 'K' && ((r===3||r===4) && (c===3||c===4))) {
+          score += (p[0]==='w') ? 0.3 : -0.3;
+        }
+
+        // Bonus für Entwicklung: Springer/Läufer nicht auf Grundreihe
+        if ((p[1]==='N' || p[1]==='B')) {
+          if (p[0]==='w' && r<6) score += 0.2;
+          if (p[0]==='b' && r>1) score -= 0.2;
+        }
+
+        // Bonus für Königssicherheit: nach Rochade besser
+        if (p[1]==='K') {
+          if (p[0]==='w' && (c===6 || c===2)) score += 0.5;
+          if (p[0]==='b' && (c===6 || c===2)) score -= 0.5;
+        }
+      }
+    }
+  }
+  return score;
+}
+
+
+// Hilfsfunktion: generiere alle legalen Züge für gegebene Farbe
+function allLegalMovesForColor(color, b, st) {
+  const moves = [];
+  for (let r=0;r<8;r++){
+    for (let c=0;c<8;c++){
+      const p = b[r][c];
+      if (p && p[0] === color) {
+        const legal = getLegalMoves(r,c,b,st);
+        for (let [tr,tc] of legal) moves.push({ from:[r,c], to:[tr,tc], piece: p });
+      }
+    }
+  }
+  return moves;
+}
+
+// Führt einen virtuellen Zug auf einer Kopie aus und liefert neues Board+State
+function doMoveOnCopy(b, st, from, to, promotionChoice) {
+  const b2 = cloneBoard(b).map(row => row.slice());
+  const st2 = cloneState(st);
+  const [fr,fc] = from, [tr,tc] = to;
+  const piece = b2[fr][fc];
+  if (!piece) return { b: b2, st: st2 };
+
+  const isEP = piece[1]==='P' && st.enPassantTarget && st.enPassantTarget[0]===tr && st.enPassantTarget[1]===tc && b2[tr][tc]==='';
+  const isCastle = piece[1]==='K' && Math.abs(tc - fc) === 2;
+
+  if (isEP){
+    b2[tr][tc] = piece;
+    b2[fr][fc] = '';
+    b2[fr][tc] = '';
+  } else if (isCastle){
+    b2[tr][tc] = piece;
+    b2[fr][fc] = '';
+    if (tc === 6){
+      b2[tr][5] = b2[tr][7];
+      b2[tr][7] = '';
+    } else if (tc === 2){
+      b2[tr][3] = b2[tr][0];
+      b2[tr][0] = '';
+    }
+  } else {
+    b2[tr][tc] = b2[fr][fc];
+    b2[fr][fc] = '';
+  }
+
+  // Update st2: basic flags (like in makeMove)
+  st2.enPassantTarget = null;
+  if (piece[1]==='P' && Math.abs(tr - fr) === 2) st2.enPassantTarget = [(fr+tr)/2, fc];
+
+  if (piece[1]==='K'){
+    if (piece[0]==='w'){ st2.whiteCanCastleK = false; st2.whiteCanCastleQ = false; }
+    else { st2.blackCanCastleK = false; st2.blackCanCastleQ = false; }
+  }
+  if (piece[1]==='R'){
+    if (fr===7 && fc===7) st2.whiteCanCastleK = false;
+    if (fr===7 && fc===0) st2.whiteCanCastleQ = false;
+    if (fr===0 && fc===7) st2.blackCanCastleK = false;
+    if (fr===0 && fc===0) st2.blackCanCastleQ = false;
+  }
+  // Wenn Turm geschlagen wurde, adjustiere auch
+  const captured = b[tr][tc];
+  if (captured && captured[1]==='R'){
+    if (tr===7 && tc===7) st2.whiteCanCastleK = false;
+    if (tr===7 && tc===0) st2.whiteCanCastleQ = false;
+    if (tr===0 && tc===7) st2.blackCanCastleK = false;
+    if (tr===0 && tc===0) st2.blackCanCastleQ = false;
+  }
+
+  // Promotion: falls notwendig automatisch zur Dame (KI)
+  if (piece[1]==='P' && (tr===0 || tr===7)) {
+    b2[tr][tc] = piece[0] + (promotionChoice || 'Q');
+  }
+
+  return { b: b2, st: st2 };
+}
+
+// Minimax mit Alpha-Beta
+function minimax(b, st, depth, alpha, beta, maximizingPlayer) {
+  // Terminal oder Tiefe 0
+  if (depth === 0) {
+    return { score: evaluateBoard(b) };
+  }
+
+  const color = maximizingPlayer ? 'w' : 'b';
+  const moves = allLegalMovesForColor(color, b, st);
+  if (moves.length === 0) {
+    // Wenn keine legalen Züge -> entweder Patt oder Matt
+    const inCheck = isKingInCheck(b, color, st);
+    if (inCheck) {
+      // Matt -> schlechter Wert für den Spieler am Zug
+      return { score: maximizingPlayer ? -9999 : 9999 };
+    } else {
+      // Patt
+      return { score: 0 };
+    }
+  }
+
+  let bestMove = null;
+  if (maximizingPlayer) {
+    let maxEval = -Infinity;
+    for (let mv of moves) {
+      const res = doMoveOnCopy(b, st, mv.from, mv.to);
+      const val = minimax(res.b, res.st, depth-1, alpha, beta, false).score;
+      if (val > maxEval) { maxEval = val; bestMove = mv; }
+      alpha = Math.max(alpha, val);
+      if (beta <= alpha) break;
+    }
+    return { score: maxEval, move: bestMove };
+  } else {
+    let minEval = Infinity;
+    for (let mv of moves) {
+      const res = doMoveOnCopy(b, st, mv.from, mv.to);
+      const val = minimax(res.b, res.st, depth-1, alpha, beta, true).score;
+      if (val < minEval) { minEval = val; bestMove = mv; }
+      beta = Math.min(beta, val);
+      if (beta <= alpha) break;
+    }
+    return { score: minEval, move: bestMove };
+  }
+}
+
+function aiMove() {
+  // Nur im Singleplayer-Modus und wenn Computer am Zug ist
+  const computerIsBlack = (players.black === 'Computer');
+  const computerIsWhite = (players.white === 'Computer');
+  if (mode !== 'single') return;
+  if (!(computerIsBlack || computerIsWhite)) return;
+
+  const aiColor = computerIsWhite ? 'w' : 'b';
+  if (currentTurn !== aiColor) return;
+
+  // Wähle Suchtiefe aus Setup-Screen
+  const depth = aiDepth;
+
+  // Falls keine legalen Züge -> nichts zu tun
+  const allMoves = allLegalMovesForColor(aiColor, board, state);
+  if (allMoves.length === 0) return;
+
+  // Minimaxiere; für Stabilität fallback zu Random wenn minimax kein Move liefert
+  const result = minimax(board, state, depth, -Infinity, Infinity, aiColor === 'w');
+  let chosen = result.move;
+  if (!chosen) {
+    // fallback: zufälliger Move
+    chosen = allMoves[Math.floor(Math.random() * allMoves.length)];
+  }
+
+  // Führe gewählten Move aus (bei Promotion automatisch Dame)
+  setTimeout(() => {
+    makeMove(chosen.from, chosen.to, 'Q');
+  }, 300); // kleine Verzögerung für bessere UX
+}
+
+/* -----------------------
+   Hook: rufe aiMove nach jedem Zug auf, falls nötig
+   ----------------------- */
+
+// Ergänze in makeMove bzw. direkt nach checkGameEnd / nach aktuellem Zugwechsel:
+// (Wenn du makeMove bereits so vorgesehen hast, füge stattdessen diese Logik ans Ende von makeMove,
+//  direkt nachdem currentTurn gesetzt, generateBoard aufgerufen und checkGameEnd durchgeführt wurde.)
+function maybeTriggerAI(){
+  if (gameOver) return;
+  // Falls Singleplayer und Computer am Zug -> AI ausführen
+  const computerIsBlack = (players.black === 'Computer');
+  const computerIsWhite = (players.white === 'Computer');
+  const aiColor = computerIsWhite ? 'w' : (computerIsBlack ? 'b' : null);
+  if (aiColor && currentTurn === aiColor && mode === 'single') {
+    // kurze Verzögerung, damit UI aktualisiert wird
+    setTimeout(aiMove, 200);
+  }
+}
+
+/* -----------------------
+   Timer & Turn UI
+   ----------------------- */
+function startTurnTimer(){
+  clearInterval(timerInterval);
+  if (gameOver) return;  // keinen neuen Timer mehr starten
+  clearInterval(timerInterval);
+  if (timeLimit === 0){
+    timerDisplay.textContent = '∞';
+    return;
+  }
+  timeLeft = timeLimit;
+  timerDisplay.textContent = timeLeft + 's';
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    timerDisplay.textContent = timeLeft + 's';
+    if (timeLeft <= 0){
+      clearInterval(timerInterval);
+
+      const loser = (currentTurn === 'w') ? players.white : players.black;
+      const winner = (currentTurn === 'w') ? players.black : players.white;
+
+      // Statusanzeige orange
+      setStatus('timeout', loser + " hat die Zeit überschritten!");
+
+      // Endgame-Modal mit Uhr-Symbol
+      showEndgameModal("Zeit abgelaufen: " + loser + " hat verloren. " + winner + " gewinnt!", "timeout");
+
+      // Spiel stoppen
+      gameOver = true;
+    }
+  },1000);
+}
+
+function updateTurnDisplay(){
+  const name = currentTurn==='w' ? players.white : players.black;
+  playerTurn.textContent = `Am Zug: ${name} (${currentTurn==='w'?'Weiß':'Schwarz'})`;
+}
+
+/* -----------------------
+   Game Loop Start
+   ----------------------- */
+function startGame(){
+  generateBoard();
+  updateTurnDisplay();
+  startTurnTimer();
+  updateMoveLog();
+}
+
+/* -----------------------
+   Utility: Clear highlights when clicking outside
+   ----------------------- */
+document.addEventListener('click', (e)=>{
+  const target = e.target;
+  if (!target.classList || (!target.classList.contains('square') && !target.closest('.modal'))){
+    // Wenn geklickt wurde außerhalb eines Boardsquares und kein Modal offen -> clear
+    if (!promoModal.style.display || promoModal.style.display === 'none') clearSelection();
+  }
+});
+
+/* -----------------------
+   Expose some helpers to console (für Debugging)
+   ----------------------- */
+window._board = board;
+window._state = state;
+</script>
+</body>
+</html>

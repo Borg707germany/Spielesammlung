@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Kniffel Multiplayer 🎲</title>
+<style>
+/* ======================
+   Layout & Grundstil
+   ====================== */
+body { font-family: Arial, sans-serif; background:#1b5e20; color:white; margin:0; }
+
+/* Startscreen */
+#startScreen { position:fixed; inset:0; background:linear-gradient(160deg,#2e7d32,#1b5e20); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; }
+#startScreen h1 { font-size:48px; margin-bottom:40px; text-shadow:2px 2px 5px rgba(0,0,0,0.5); }
+#startScreen button{ background:#43a047; color:white; font-size:20px; padding:12px 30px; margin:10px; border:none; border-radius:10px; cursor:pointer; }
+
+/* Hauptlayout */
+#main { display:flex; height:100vh; }
+#scoreboard { width:350px; background:#33691e; padding:10px; overflow-y:auto; }
+#game { 
+  flex:1; 
+  background:#2e7d32; 
+  display:flex; 
+  flex-direction:column; 
+  align-items:center; 
+  justify-content:center; 
+ }
+
+/* Würfel nebeneinander anordnen */
+#würfelContainer {
+  display: flex;
+  justify-content: center;  /* horizontal zentriert */
+  align-items: center;      /* vertikal mittig innerhalb des Containers */
+  flex-wrap: nowrap;
+  gap: 15px;                /* kleiner Abstand zwischen Würfeln */
+  height: 200px;            /* gibt dem Container eine feste Höhe */
+  margin-top: 100px;        /* verschiebt den Block optisch nach unten */
+}
+
+
+/* Info & Steuerung */
+#info { margin-top:10px; margin-bottom:25px; font-size:18px; font-weight:bold; color:#fffde7; text-shadow:1px 1px 2px rgba(0,0,0,0.5); }
+#steuerungContainer { display:flex; justify-content:center; gap:10px; margin-top:auto; padding:20px; }
+
+/* Buttons */
+button { font-size:16px; padding:10px 20px; margin:5px; cursor:pointer; border:none; border-radius:5px; font-weight:bold; }
+#wurfButton { background:#43a047; color:white; } #hilfeButton { background:#1e88e5; color:white; }
+#neuButton { background:#ffb300; color:black } #abbrechenButton { background:#f4511e; color:white } #beendenButton { background:#c62828; color:white }
+#highscoreButton { background:#9575cd; color:white } #clearHighscoresButton { background:#7b1fa2; color:white }
+
+/* Würfel */
+.würfel { width:80px; height:80px; background:#fff; border-radius:15px; display:flex; justify-content:center; align-items:center; margin:10px; position:relative; cursor:pointer; border:2px solid #333; box-shadow:0 6px 12px rgba(0,0,0,0.5); transition:transform .3s ease; }
+.würfel:hover { transform:scale(1.05); }
+.würfel.behalten { border:3px solid gold; box-shadow:0 8px 16px rgba(255,215,0,0.7); }
+.dot { width:12px; height:12px; background:#000; border-radius:50%; position:absolute; }
+
+/* Tabellen */
+table { border-collapse:collapse; width:100%; margin-top:10px; }
+th, td { border:1px solid white; padding:5px; text-align:center; }
+th { background:#33691e; }
+td { background:#558b2f; cursor:pointer; }
+td.used { background:#888; cursor:not-allowed; }
+td.wählbar { background:#81c784; }
+td.wählbar:hover { background:#66bb6a; }
+td.summe { background:#aed581; font-weight:bold; color:black; }
+td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
+
+/* Auffälligeres Highscore-Modal */
+#highscoreModal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; }
+#highscoreModal.active { display:flex; }
+
+/* dunkler, dichter Backdrop (sichtbarer) */
+#highscoreBackdrop {
+  position:absolute;
+  inset:0;
+  background: rgba(0,0,0,0.8); /* stärker als vorher */
+  backdrop-filter: blur(4px);   /* leichter Blur-Effekt */
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity 200ms ease;
+}
+
+/* Content prominent, kontrastreich und mit Pop-in Animation */
+#highscoreContent {
+  position:relative;
+  background: linear-gradient(180deg, #2f7a2f 0%, #245b24 100%);
+  border: 2px solid rgba(255,255,255,0.14);
+  padding: 20px;
+  width: min(720px, 94%);
+  max-width: 720px;
+  border-radius: 14px;
+  color: #fffde7;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.65);
+  transform: translateY(10px) scale(0.98);
+  opacity: 0;
+  transition: transform 220ms cubic-bezier(.22,.9,.38,1), opacity 200ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Wenn aktiv: sichtbar, leicht vergrößert */
+#highscoreModal.active #highscoreContent {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Header hervorheben */
+#highscoreTitle {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  color: #fffde7;
+  text-shadow: 0 4px 14px rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Option: kleines Icon-Label links */
+.hs-icon {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:44px;
+  height:44px;
+  border-radius:8px;
+  background: linear-gradient(180deg,#ffd54f,#ffb300);
+  color:#2b2b2b;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  font-size:20px;
+}
+
+/* Table-Container kontraststärker */
+#highscoreTable { width:100%; border-collapse:collapse; color:white; }
+#highscoreTable thead th { background: rgba(0,0,0,0.18); color:#fff; font-weight:700; padding:8px; text-align:left; }
+#highscoreTable tbody td { background: rgba(255,255,255,0.03); padding:8px; border-top:1px solid rgba(255,255,255,0.04); color:#fff; }
+
+/* Deutlicherer "Keine Highscores"-Zustand */
+#highscoreTbody tr td { text-align:center; color:rgba(255,255,255,0.9); font-weight:600; }
+
+/* Aktionen-Buttons klarer */
+#highscoreActions button { cursor:pointer; border: none; padding:8px 12px; border-radius:8px; font-weight:700; }
+#clearHighscoresButton { background:#e53935; color:white; }
+#closeHighscoresButton { background:#fafafa; color:#222; }
+
+/* Responsive: kleinere Breiten */
+@media (max-width:520px) {
+  #highscoreContent { width:94%; padding:14px; border-radius:10px; }
+  .hs-icon { width:36px; height:36px; font-size:16px; }
+  #highscoreTitle { font-size:1.05rem; }
+}
+
+
+/* #highscoreList { max-height:300px; overflow-y:auto; margin:10px 0; padding:0; list-style:none; } */
+
+/* Visuelles "deaktiviert" für Würfel */
+.disabled-dice { opacity:0.6; pointer-events:none; }
+
+/* Placeholder-Farbe der Highscore-Suche */
+#hsSearch::placeholder { color: #fff59d; opacity: 1; }        /* moderner Standard */
+#hsSearch::-webkit-input-placeholder { color: #fff59d; }      /* Chrome, Safari, Edge (Blink) */
+#hsSearch:-ms-input-placeholder { color: #fff59d; }           /* Internet Explorer 10-11 */
+#hsSearch::-ms-input-placeholder { color: #fff59d; }          /* Microsoft Edge Legacy */
+
+</style>
+</head>
+<body>
+
+<!-- ======================
+     START SCREEN
+     ====================== -->
+<div id="startScreen">
+  <h1>Kniffel Multiplayer 🎲</h1>
+  <button id="startButton" type="button">▶️ Spiel starten</button>
+  <button id="anleitungButton" type="button">📜 Anleitung</button>
+  <button id="exitButton" type="button">🚪 Beenden</button>
+</div>
+
+<!-- ======================
+     MAIN GAME LAYOUT
+     ====================== -->
+<div id="main" style="display:none;">
+  <div id="scoreboard">
+    <h2>Punktetafel</h2>
+    <div id="scoreTable"></div>
+  </div>
+
+  <div id="game">
+    <div id="würfelContainer"></div>
+    <div id="info"></div>
+
+    <button id="wurfButton" type="button">🎲 Würfeln</button>
+    <button id="hilfeButton" type="button">❓ Hilfe</button>
+
+    <div id="steuerungContainer">
+      <button id="neuButton" type="button">🔄 Neues Spiel</button>
+      <button id="abbrechenButton" type="button">🛑 Spiel abbrechen</button>
+      <button id="highscoreButton" type="button">🏆 Highscores</button>
+      <button id="beendenButton" type="button">❌ Beenden</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================
+     HIGHSCORE MODAL (ERWEITERT)
+     ====================== -->
+<div id="highscoreModal" role="dialog" aria-modal="true" aria-labelledby="highscoreTitle">
+  <div id="highscoreBackdrop"></div>
+  <div id="highscoreContent">
+    <h3 id="highscoreTitle"><span class="hs-icon">🏆</span> Highscores</h3>
+
+    <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+      <input id="hsSearch" type="search" placeholder="Suche Name..." style="flex:1; padding:6px; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:transparent; color:white;">
+      
+    </div>
+
+    <div style="max-height:300px; overflow-y:auto; background:rgba(0,0,0,0.06); padding:8px; border-radius:6px;">
+      <table id="highscoreTable" style="width:100%; border-collapse:collapse; color:white;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:6px;">Rang</th>
+            <th style="text-align:left; padding:6px;">Name</th>
+            <th style="text-align:right; padding:6px;">Siege</th>
+            <th style="text-align:right; padding:6px;">Spiele</th>
+            <th style="text-align:right; padding:6px;">Best</th>
+            <th style="padding:6px;">Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="highscoreTbody"></tbody>
+      </table>
+    </div>
+
+    <div id="highscoreActions" style="display:flex; justify-content:space-between; gap:8px; margin-top:12px;">
+      <div>
+        <button id="clearHighscoresButton" type="button" style="background:#e57373; color:black; padding:8px 10px; border-radius:6px;">🧹 Alle löschen</button>
+      </div>
+      <div>
+        <button id="closeHighscoresButton" type="button" style="background:#9e9e9e; color:black; padding:8px 10px; border-radius:6px;">Schließen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Tooltip-Feld -->
+<div id="tooltip" style="
+  position:absolute;
+  background:rgba(0,0,0,0.8);
+  color:#fff;
+  padding:6px 10px;
+  border-radius:6px;
+  font-size:14px;
+  pointer-events:none;
+  display:none;
+  z-index:300;
+"></div>
+
+<!-- ======================
+     SCRIPT: Spiel-Logik & UI
+     ====================== -->
+<script>
+/* ----------------------
+   Konstanten
+   ---------------------- */
+const KATEGORIEN = [
+  "1er","2er","3er","4er","5er","6er",
+  "Dreierpasch","Viererpasch","Full House",
+  "Kleine Straße","Große Straße","Kniffel","Chance"
+];
+
+/* ----------------------
+   Game-Klasse (Zustand & Logik)
+   ---------------------- */
+class Game {
+  constructor(){
+    this.spieler = [];
+    this.aktuelleSpielerIndex = 0;
+    this.würfel = [1,1,1,1,1];
+    this.behalten = [false,false,false,false,false];
+    this.rwurf = 0;
+    this.spielerPunkte = {};
+    this.verwendeteKategorien = {};
+    this.wurfInAktion = false;
+    this.gameOver = false;
+  }
+
+  initNewGameFromPrompts(){
+    this.spieler = []; this.spielerPunkte = {}; this.verwendeteKategorien = {};
+    this.aktuelleSpielerIndex = 0; this.rwurf = 0; this.behalten = [false,false,false,false,false];
+    this.würfel = [1,1,1,1,1]; this.wurfInAktion = false; this.gameOver = false;
+
+    let anzahl = parseInt(prompt("Wie viele Spieler? (1-4)","2"));
+    if (isNaN(anzahl) || anzahl < 1 || anzahl > 4) anzahl = 2;
+    for (let i=0; i<anzahl; i++){
+      let name = prompt(`Name für Spieler ${i+1}:`, `Spieler ${i+1}`);
+      if (!name) name = `Spieler ${i+1}`;
+      name = name.trim().slice(0, 25);
+      this.spieler.push(name);
+      this.spielerPunkte[name] = 0;
+      this.verwendeteKategorien[name] = new Set();
+    }
+  }
+
+  rollDice(){
+    if (this.wurfInAktion || this.rwurf >= 3 || this.gameOver) return null;
+    this.wurfInAktion = true;
+    this.rwurf++;
+    for (let i=0;i<this.würfel.length;i++){
+      if (!this.behalten[i]) this.würfel[i] = Math.floor(Math.random()*6)+1;
+    }
+    this.wurfInAktion = false;
+    return this.würfel.slice();
+  }
+
+  toggleKeep(index){
+    if (this.rwurf === 0 || this.wurfInAktion || this.gameOver) return false;
+    this.behalten[index] = !this.behalten[index];
+    return true;
+  }
+
+  calculatePoints(kategorie){
+    const counts = [0,0,0,0,0,0];
+    this.würfel.forEach(w => counts[w-1]++);
+    const sum = arr => arr.reduce((a,b)=>a+b,0);
+
+    switch(kategorie){
+      case "1er": return counts[0]*1;
+      case "2er": return counts[1]*2;
+      case "3er": return counts[2]*3;
+      case "4er": return counts[3]*4;
+      case "5er": return counts[4]*5;
+      case "6er": return counts[5]*6;
+      case "Dreierpasch": return counts.some(c=>c>=3)?sum(this.würfel):0;
+      case "Viererpasch": return counts.some(c=>c>=4)?sum(this.würfel):0;
+      case "Full House": return (counts.includes(3) && counts.includes(2)) ? 25 : 0;
+      case "Kleine Straße": return Game.checkStraight(this.würfel,4)?30:0;
+      case "Große Straße": return Game.checkStraight(this.würfel,5)?40:0;
+      case "Kniffel": return counts.includes(5)?50:0;
+      case "Chance": return sum(this.würfel);
+    }
+    return 0;
+  }
+
+  static checkStraight(wuerfel, length){
+    const unique = [...new Set(wuerfel)].sort((a,b)=>a-b);
+    let max=1, curr=1;
+    for (let i=1;i<unique.length;i++){
+      if (unique[i] === unique[i-1]+1) curr++; else curr = 1;
+      max = Math.max(max,curr);
+    }
+    return max >= length;
+  }
+
+  chooseCategory(spielerName, kategorie){
+    if (!this.spieler.includes(spielerName)) return false;
+    if (this.verwendeteKategorien[spielerName].has(kategorie)) return false;
+    if (this.rwurf === 0) return false;
+
+    const punkte = this.calculatePoints(kategorie);
+    this.verwendeteKategorien[spielerName].add(kategorie);
+
+    // Reset für nächsten Spieler
+    this.rwurf = 0;
+    this.behalten = [false,false,false,false,false];
+    this.würfel = [1,1,1,1,1];
+    this.aktuelleSpielerIndex = (this.aktuelleSpielerIndex + 1) % this.spieler.length;
+    return punkte;
+  }
+
+  isGameOver(){ return this.spieler.every(sp => this.verwendeteKategorien[sp].size === KATEGORIEN.length); }
+  getCurrentPlayer(){ return this.spieler[this.aktuelleSpielerIndex]; }
+}
+
+/* ----------------------
+   Instanz & DOM-Refs
+   ---------------------- */
+const game = new Game();
+
+const startScreen = document.getElementById("startScreen");
+const mainGame = document.getElementById("main");
+
+/* Buttons & Modal-Refs (existenzgeprüft) */
+const startBtn = document.getElementById("startButton");
+const anleitungBtn = document.getElementById("anleitungButton");
+const exitBtn = document.getElementById("exitButton");
+const wurfBtn = document.getElementById("wurfButton");
+const hilfeBtn = document.getElementById("hilfeButton");
+const neuBtn = document.getElementById("neuButton");
+const abbrechenBtn = document.getElementById("abbrechenButton");
+const beendenBtn = document.getElementById("beendenButton");
+const highscoreButton = document.getElementById("highscoreButton");
+
+/* ----------------------
+   Start / Anleitung / Exit
+   ---------------------- */
+if (startBtn){
+  startBtn.onclick = () => {
+    startScreen.style.transition = "opacity 0.6s ease";
+    startScreen.style.opacity = 0;
+    setTimeout(()=>{ startScreen.style.display = "none"; mainGame.style.display = "flex"; startNewGame(); }, 700);
+  };
+}
+if (anleitungBtn){
+  anleitungBtn.onclick = () => alert(
+`🎲 Kniffel Anleitung:
+
+- Jeder Spieler würfelt bis zu 3 Mal pro Runde.
+- Nach jedem Wurf können Würfel behalten oder neu geworfen werden.
+- Danach wird eine Kategorie gewählt, um Punkte einzutragen.
+
+Bonus: Summe 1er-6er ≥63 → +35 Bonuspunkte.`
+  );
+}
+if (exitBtn){
+  exitBtn.onclick = ()=> { if (confirm("Möchtest du das Spiel wirklich beenden?")) document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%;color:white;'>👋 Spiel beendet.</h1>"; };
+}
+
+/* ----------------------
+   Button-Handler (Robust)
+   ---------------------- */
+if (wurfBtn) wurfBtn.onclick = handleRollButton;
+if (hilfeBtn) hilfeBtn.onclick = ()=> alert(
+  `Willkommen bei Kniffel!
+
+Spielablauf:
+- Jeder Spieler darf pro Runde bis zu 3 Mal würfeln.
+- Nach jedem Wurf können Würfel behalten oder neu geworfen werden.
+- Nach maximal 3 Würfen wählst du eine Kategorie, um Punkte zu erhalten.
+
+Kategorien:
+1er-6er: Summe der entsprechenden Würfel.
+Dreierpasch: 3 gleiche → Summe aller Würfel.
+Viererpasch: 4 gleiche → Summe aller Würfel.
+Full House: 3 gleiche + 2 gleiche → 25 Punkte.
+Kleine Straße: 4 aufeinanderfolgende → 30 Punkte.
+Große Straße: 5 aufeinanderfolgende → 40 Punkte.
+Kniffel: 5 gleiche → 50 Punkte.
+Chance: Summe aller Würfel.
+
+Bonus: Summe 1er-6er ≥63 → +35 Bonuspunkte.`
+  );
+
+if (neuBtn) neuBtn.onclick = () => {
+  if (!confirm("Willst du wirklich ein neues Spiel starten? Der aktuelle Fortschritt geht verloren.")) return;
+  game.gameOver = false;
+  if (wurfBtn) wurfBtn.disabled = false;
+  startNewGame();
+};
+
+if (abbrechenBtn) abbrechenBtn.onclick = () => {
+  if (!confirm("Möchtest du das aktuelle Spiel abbrechen und zur Spielerauswahl zurückkehren?")) return;
+  game.gameOver = false;
+  startNewGame();
+};
+
+if (beendenBtn) beendenBtn.onclick = () => {
+  if (confirm("Möchtest du das Spiel wirklich beenden?")) document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%;color:white;'>👋 Spiel beendet.</h1>";
+};
+
+/* ----------------------
+   Highscore Modul v2
+   ---------------------- */
+
+const HIGHSCORE_KEY = 'kniffel_highscores_v2';
+const HIGHSCORE_LEGACY_KEY = 'kniffel_statistik';
+const HIGHSCORE_MAX_ENTRIES = 50;
+
+const highscoreModal = document.getElementById("highscoreModal");
+const highscoreTbody = document.getElementById("highscoreTbody");
+const highscoreBackdrop = document.getElementById("highscoreBackdrop");
+const closeHighscoresButton = document.getElementById("closeHighscoresButton");
+const modalCloseX = document.querySelector("#highscoreContent .closeModal");
+const clearHighscoresButton = document.getElementById("clearHighscoresButton");
+const hsSearch = document.getElementById("hsSearch");
+
+function normalizeId(name){
+  return name ? name.trim().toLowerCase().replace(/\s+/g,' ') : '';
+}
+function formatDateISO(iso){ if(!iso) return '-'; const d = new Date(iso); return d.toLocaleDateString(); }
+
+function loadScores(){
+  try {
+    const raw = localStorage.getItem(HIGHSCORE_KEY);
+    if (raw){
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return arr;
+    }
+
+    // Migration legacy
+    const legacy = localStorage.getItem(HIGHSCORE_LEGACY_KEY);
+    if (legacy){
+      try {
+        const parsed = JSON.parse(legacy);
+        const migrated = [];
+        Object.keys(parsed || {}).forEach(k => {
+          try {
+            const name = decodeURIComponent(k);
+            const wins = parseInt(parsed[k]) || 0;
+            const id = normalizeId(name);
+            migrated.push({ id, name, games: wins, wins, lastWin: null, bestScore: 0 });
+          } catch(e){ /* ignore malformed */ }
+        });
+        migrated.sort((a,b)=> b.wins - a.wins || a.name.localeCompare(b.name));
+        localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(migrated.slice(0, HIGHSCORE_MAX_ENTRIES)));
+        localStorage.removeItem(HIGHSCORE_LEGACY_KEY);
+        return migrated;
+      } catch (e) { console.error('Legacy parse failed', e); return []; }
+    }
+    return [];
+  } catch (e) { console.error('loadScores error', e); return []; }
+}
+
+function saveScores(list){
+  try {
+    const safe = (list || []).filter(x => x && x.id).slice(0, HIGHSCORE_MAX_ENTRIES);
+    localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(safe));
+  } catch (e) { console.error('saveScores error', e); alert('Fehler beim Speichern der Highscores.'); }
+  
+  try {
+  const cur = loadScores();
+  if (Array.isArray(cur) && cur.length > HIGHSCORE_MAX_ENTRIES) {
+    cur.sort((a,b)=> (b.wins||0) - (a.wins||0) || (b.bestScore||0) - (a.bestScore||0) || (a.name||'').localeCompare(b.name||''));
+    saveScores(cur.slice(0, HIGHSCORE_MAX_ENTRIES));
+  }
+} catch(e){ /* ignore */ }
+
+}
+
+// Record win (called for every winner)
+function recordWin(playerName, bestScore){
+  if (!playerName) return;
+  const id = normalizeId(playerName);
+  const list = loadScores();
+  let entry = list.find(x => x.id === id);
+  if (!entry){
+    entry = { id, name: playerName.trim().slice(0,25), games: 1, wins: 1, lastWin: new Date().toISOString(), bestScore: bestScore || 0 };
+    list.push(entry);
+  } else {
+    entry.games = (entry.games || 0) + 1;
+    entry.wins = (entry.wins || 0) + 1;
+    entry.lastWin = new Date().toISOString();
+    if (bestScore && (!entry.bestScore || bestScore > entry.bestScore)) entry.bestScore = bestScore;
+    entry.name = playerName.trim().slice(0,25);
+  }
+  list.sort((a,b)=> b.wins - a.wins || (b.bestScore||0) - (a.bestScore||0) || a.name.localeCompare(b.name));
+  saveScores(list);
+}
+
+// Optional: increment games for all players (call if you want to count played games)
+// This function is not auto-called; call it before recordWin(...) if desired.
+function incrementGamesForAll(playerNames){
+  const list = loadScores();
+  playerNames.forEach(p => {
+    const id = normalizeId(p);
+    let e = list.find(x => x.id === id);
+    if (!e){
+      list.push({ id, name: p, games: 1, wins: 0, lastWin: null, bestScore: 0 });
+    } else {
+      e.games = (e.games || 0) + 1;
+    }
+  });
+  saveScores(list);
+}
+
+// Robustes Rendern der Highscores (sichere DOM-Prüfungen)
+function renderHighscores(filter){
+  const tbody = document.getElementById('highscoreTbody');
+  if (!tbody) return; // nichts zu tun, falls DOM fehlt
+
+  const rows = loadScores() || [];
+  const filtered = (rows || []).filter(r => {
+    if (!filter) return true;
+    try { return (r.name || '').toLowerCase().includes(String(filter).toLowerCase()); }
+    catch { return true; }
+  });
+
+  tbody.innerHTML = '';
+  if (filtered.length === 0){
+    const tr = document.createElement('tr');
+    const td = document.createElement('td');
+    td.colSpan = 6;
+    td.style.padding = '8px';
+    td.style.textAlign = 'center';
+    td.innerText = 'Keine Highscores vorhanden.';
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+    return;
+  }
+
+  filtered.forEach((e, idx) => {
+    const tr = document.createElement('tr');
+
+    const tdRank = document.createElement('td'); tdRank.style.padding = '6px'; tdRank.innerText = (idx+1);
+    const tdName = document.createElement('td'); tdName.style.padding = '6px'; tdName.innerText = e.name || '-';
+    const tdWins = document.createElement('td'); tdWins.style.padding = '6px'; tdWins.style.textAlign='right'; tdWins.innerText = e.wins || 0;
+    const tdGames = document.createElement('td'); tdGames.style.padding = '6px'; tdGames.style.textAlign='right'; tdGames.innerText = e.games || 0;
+    const tdBest = document.createElement('td'); tdBest.style.padding = '6px'; tdBest.style.textAlign='right'; tdBest.innerText = (e.bestScore != null ? e.bestScore : '-');
+    const tdAction = document.createElement('td'); tdAction.style.padding = '6px';
+
+    const btnReset = document.createElement('button');
+    btnReset.innerText = 'Reset';
+    btnReset.style.padding = '4px 6px';
+    btnReset.onclick = (ev) => {
+      ev.stopPropagation();
+      if (!confirm(`Einträge von ${e.name} zurücksetzen?`)) return;
+      const newList = (loadScores() || []).filter(x => x.id !== e.id);
+      saveScores(newList);
+      renderHighscores(document.getElementById('hsSearch') ? document.getElementById('hsSearch').value : '');
+      alert(`${e.name} wurde zurückgesetzt.`);
+    };
+
+    tdAction.appendChild(btnReset);
+
+    tr.appendChild(tdRank);
+    tr.appendChild(tdName);
+    tr.appendChild(tdWins);
+    tr.appendChild(tdGames);
+    tr.appendChild(tdBest);
+    tr.appendChild(tdAction);
+
+    tbody.appendChild(tr);
+  });
+}
+
+// Öffnen: kein backdrop-close, Fokus auf Schließen-Button
+function openHighscoreModal(){
+  try {
+    const filter = (document.getElementById('hsSearch') && document.getElementById('hsSearch').value) ? document.getElementById('hsSearch').value : '';
+    renderHighscores(filter);
+
+    const modal = document.getElementById('highscoreModal');
+    if (!modal) { console.warn('Highscore modal not found'); return; }
+
+    modal.classList.add('active');
+
+    // set focus to Schließen-Button
+    const closeBtn = document.getElementById('closeHighscoresButton');
+    if (closeBtn) {
+      closeBtn.focus();
+      // Ensure closeBtn closes modal (idempotent)
+      closeBtn.onclick = () => closeHighscoreModal();
+    }
+
+    // Remove any previously attached backdrop click handler to be safe
+    const backdrop = document.getElementById('highscoreBackdrop');
+    if (backdrop && backdrop._hsClickRegistered) {
+      backdrop.removeEventListener('click', backdrop._hsClickHandler || (() => {}));
+      backdrop._hsClickRegistered = false;
+      backdrop._hsClickHandler = null;
+    }
+
+    // Prevent Esc from closing the modal: intercept and stop propagation for Esc key
+    document.addEventListener('keydown', escBlocker);
+
+  } catch (e) {
+    console.error('openHighscoreModal error:', e);
+    alert('Fehler beim Öffnen der Highscores. Öffne die Konsole für Details.');
+  }
+}
+
+function closeHighscoreModal(){
+  const modal = document.getElementById('highscoreModal');
+  if (!modal) return;
+  modal.classList.remove('active');
+
+  // remove Esc blocker when closed
+  document.removeEventListener('keydown', escBlocker);
+}
+
+// helper to block ESC key while modal is open
+function escBlocker(e){
+  if (e.key === 'Escape' || e.key === 'Esc') {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}
+
+function clearHighscores(){
+  if (!confirm("Alle Highscores löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) return;
+  try {
+    const raw = JSON.stringify(loadScores());
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(raw).catch(()=>{ /* ignore */ });
+    } else {
+      prompt('Backup deiner Highscores (kopieren):', raw);
+    }
+  } catch(e){ /* ignore */ }
+  localStorage.removeItem(HIGHSCORE_KEY);
+  localStorage.removeItem(HIGHSCORE_LEGACY_KEY);
+  renderHighscores(hsSearch.value || '');
+  alert('Highscores wurden gelöscht.');
+}
+
+// Bind UI-Elemente (nur unterer Schließen-Button erlaubt Schließen)
+if (closeHighscoresButton) closeHighscoresButton.onclick = closeHighscoreModal;
+if (clearHighscoresButton) clearHighscoresButton.onclick = clearHighscores;
+if (hsSearch) hsSearch.oninput = (e) => renderHighscores(e.target.value);
+
+// Der Button im Hauptlayout (falls existierend) öffnet Modal
+if (highscoreButton) highscoreButton.onclick = openHighscoreModal;
+
+
+/* ----------------------
+   Spiel-Flow: Start / UI Aufbau
+   ---------------------- */
+function startNewGame(){
+  try {
+    game.gameOver = false; // wichtig: re-enable interactions
+    const scoreTableEl = document.getElementById("scoreTable"); if (scoreTableEl) scoreTableEl.innerHTML = "";
+    game.initNewGameFromPrompts();
+
+    if (!game.spieler || game.spieler.length === 0) {
+      const info = document.getElementById("info"); if (info) info.innerText = "Kein Spiel aktiv.";
+      if (wurfBtn) wurfBtn.disabled = true;
+      return;
+    }
+
+    buildScoreTable();
+    updateInfo();
+    renderDice();
+    updateWählbar();
+
+    if (wurfBtn) wurfBtn.disabled = false;
+    game.rwurf = 0; game.wurfInAktion = false; game.behalten = [false,false,false,false,false]; game.würfel = [1,1,1,1,1];
+  } catch (err) {
+    console.error("startNewGame error:", err);
+    alert("Fehler beim Starten eines neuen Spiels. Öffne F12 Console.");
+  }
+}
+
+function attachTooltipToTable(){
+  const tooltip = document.getElementById('tooltip');
+  const table = document.querySelector('#scoreTable table');
+  if (!tooltip || !table) return;
+
+  tooltip.style.position = 'absolute';
+  tooltip.style.display = 'none';
+  tooltip.style.pointerEvents = 'none';
+  tooltip.style.transition = 'opacity .12s';
+  tooltip.style.opacity = '0';
+
+  table.addEventListener('mouseover', (ev) => {
+    const td = ev.target.closest('td');
+    if (!td || !table.contains(td)) return;
+
+    const colIndex = td.cellIndex; // 0 = Kategorie, 1..n = Spieler
+    if (colIndex === 0) return; // erste Spalte überspringen
+
+    // Nur anzeigen, wenn die Spalte dem aktuellen Spieler gehört
+    const aktiveSpalte = game.spieler.indexOf(game.getCurrentPlayer()) + 1;
+    if (colIndex !== aktiveSpalte) {
+      tooltip.style.display = 'none';
+      tooltip.style.opacity = '0';
+      return;
+    }
+
+    const tr = td.parentElement;
+    if (!tr) return;
+    const rowIndex = tr.rowIndex - table.tHead.rows.length;
+    if (rowIndex < 0 || rowIndex >= KATEGORIEN.length) {
+      tooltip.style.display = 'none'; tooltip.style.opacity = '0';
+      return;
+    }
+
+    const kategorie = KATEGORIEN[rowIndex];
+    const spielerName = game.spieler[colIndex - 1];
+
+    // Positionierung
+    const rect = td.getBoundingClientRect();
+    tooltip.style.left = (rect.right + 8 + window.scrollX) + 'px';
+    tooltip.style.top = (rect.top + window.scrollY) + 'px';
+
+    if (game.verwendeteKategorien[spielerName] && game.verwendeteKategorien[spielerName].has(kategorie)) {
+      tooltip.innerText = 'Bereits verwendet';
+      tooltip.style.display = 'block'; tooltip.style.opacity = '1';
+      return;
+    }
+
+    if (game.rwurf === 0) {
+      tooltip.innerText = 'Keine Würfe vorhanden';
+      tooltip.style.display = 'block'; tooltip.style.opacity = '1';
+      return;
+    }
+
+    let punkte = 0;
+    try { punkte = game.calculatePoints(kategorie); } catch (e) { punkte = 0; }
+
+    tooltip.innerText = `${punkte} Punkt${punkte === 1 ? '' : 'e'}`;
+    tooltip.style.display = 'block'; tooltip.style.opacity = '1';
+  });
+
+  table.addEventListener('mousemove', (ev) => {
+    const td = ev.target.closest('td');
+    if (!td || !table.contains(td)) { tooltip.style.display = 'none'; return; }
+    const colIndex = td.cellIndex;
+    const aktiveSpalte = game.spieler.indexOf(game.getCurrentPlayer()) + 1;
+    if (colIndex !== aktiveSpalte) { tooltip.style.display = 'none'; return; }
+
+    const rect = td.getBoundingClientRect();
+    let left = rect.right + 8 + window.scrollX;
+    let top = rect.top + 4 + window.scrollY;
+    const tw = tooltip.offsetWidth || 150;
+    const th = tooltip.offsetHeight || 24;
+    if (left + tw > window.scrollX + window.innerWidth) left = rect.left - tw - 8 + window.scrollX;
+    if (top + th > window.scrollY + window.innerHeight) top = window.scrollY + window.innerHeight - th - 8;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  });
+
+  table.addEventListener('mouseout', (ev) => {
+    const related = ev.relatedTarget;
+    if (related && table.contains(related)) return;
+    tooltip.style.opacity = '0';
+    setTimeout(() => { tooltip.style.display = 'none'; }, 150);
+  });
+}
+
+function buildScoreTable(){
+  const container = document.getElementById("scoreTable"); if (!container) return;
+  container.innerHTML = "";
+  const table = document.createElement("table");
+
+  // Header
+  const thead = document.createElement("thead"); const trh = document.createElement("tr");
+  const th0 = document.createElement("th"); th0.innerText = "Kategorie"; trh.appendChild(th0);
+  game.spieler.forEach(s => { const th = document.createElement("th"); th.innerText = s; trh.appendChild(th); });
+  thead.appendChild(trh); table.appendChild(thead);
+
+  // Body: Kategorien + Spielerzellen
+  const tbody = document.createElement("tbody");
+  KATEGORIEN.forEach(kat => {
+    const row = document.createElement("tr");
+    const label = document.createElement("td"); label.innerText = kat; row.appendChild(label);
+
+    game.spieler.forEach(sp => {
+      const cell = document.createElement("td"); cell.innerText = "-"; cell.classList.add("wählbar");
+
+      cell.onclick = () => {
+        if (sp !== game.getCurrentPlayer()) return;
+        if (game.verwendeteKategorien[sp].has(kat)) return;
+        if (game.rwurf === 0) return;
+
+        const punkte = game.chooseCategory(sp, kat);
+        if (punkte === false) return;
+
+        const tb = table.tBodies[0];
+        const rowIndex = KATEGORIEN.indexOf(kat);
+        const colIndex = game.spieler.indexOf(sp) + 1;
+        if (tb && tb.rows[rowIndex] && tb.rows[rowIndex].cells[colIndex]) {
+          tb.rows[rowIndex].cells[colIndex].innerText = punkte;
+          const c = tb.rows[rowIndex].cells[colIndex];
+          c.classList.remove('wählbar'); c.classList.add('used'); c.onclick = null;
+        }
+
+        updateSumsAndCheckEnd(table);
+        renderDice();
+        updateInfo();
+        updateWählbar();
+        if (wurfBtn) wurfBtn.disabled = false;
+      };
+
+      row.appendChild(cell);
+    });
+
+    tbody.appendChild(row);
+  });
+
+  // Zusätzliche Summenzeilen
+  ["Obere Summe","Bonus","Untere Summe","Gesamt"].forEach(extra => {
+    const row = document.createElement("tr");
+    const labelCell = document.createElement("td"); labelCell.innerText = extra; row.appendChild(labelCell);
+    game.spieler.forEach(() => { const cell = document.createElement("td"); cell.innerText = "-"; row.appendChild(cell); });
+    tbody.appendChild(row);
+  });
+
+  table.appendChild(tbody);
+  container.appendChild(table);
+  attachTooltipToTable();
+}
+
+/* ----------------------
+   Würfel-Rendering / Interaktion
+   ---------------------- */
+function renderDice(){
+  const container = document.getElementById("würfelContainer"); if (!container) return;
+  container.innerHTML = "";
+
+  game.würfel.forEach((w, i) => {
+    const div = document.createElement("div");
+    div.className = "würfel" + (game.behalten[i] ? " behalten" : "");
+    if (game.gameOver) div.classList.add('disabled-dice'); else div.classList.remove('disabled-dice');
+
+    if (!game.gameOver) {
+      div.setAttribute('tabindex','0');
+      div.onclick = () => { if (game.toggleKeep(i)) renderDice(); };
+      div.onkeydown = (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); if (game.toggleKeep(i)) renderDice(); } };
+    } else {
+      div.removeAttribute('tabindex');
+      div.onclick = null; div.onkeydown = null;
+    }
+
+    drawPips(div, w);
+    container.appendChild(div);
+  });
+}
+
+function drawPips(div, zahl){
+  const pos = {
+    1:[[50,50]],
+    2:[[25,25],[75,75]],
+    3:[[25,25],[50,50],[75,75]],
+    4:[[25,25],[75,25],[25,75],[75,75]],
+    5:[[25,25],[75,25],[50,50],[25,75],[75,75]],
+    6:[[25,25],[75,25],[25,50],[75,50],[25,75],[75,75]]
+  };
+  (pos[zahl] || []).forEach(([x,y]) => {
+    const dot = document.createElement("div"); dot.className = "dot";
+    dot.style.left = `${x}%`; dot.style.top = `${y}%`; dot.style.transform = "translate(-50%,-50%)";
+    div.appendChild(dot);
+  });
+}
+
+/* ----------------------
+   Würfeln-Logik (Button)
+   ---------------------- */
+function handleRollButton(){
+  if (game.wurfInAktion || game.gameOver) return;
+
+  // Wenn bereits 3-mal gewürfelt wurde → Info statt Alert
+  if (game.rwurf >= 3) {
+    const info = document.getElementById("info");
+    if (info) {
+      info.innerText = "⚠️ Du hast bereits 3-mal gewürfelt. Bitte wähle jetzt eine Kategorie zum Eintragen!";
+      info.style.color = "#ffeb3b"; // Gelber Warntext
+      info.style.fontWeight = "bold";
+    }
+    if (wurfBtn) wurfBtn.disabled = true;
+    return;
+  }
+
+  // --- Animation und Wurf ---
+  const container = document.getElementById("würfelContainer");
+  const divs = container ? Array.from(container.children) : [];
+  divs.forEach((div, i) => {
+    if (!game.behalten[i]) {
+      const rotate = Math.random() * 720 - 360;
+      const translateY = -40 - Math.random() * 30;
+      div.style.transition = "transform .5s cubic-bezier(0.25,0.1,0.25,1)";
+      div.style.transform = `translateY(${translateY}px) rotate(${rotate}deg)`;
+    }
+  });
+
+  setTimeout(() => {
+    const result = game.rollDice();
+    if (result === null) return;
+    renderDice();
+    updateInfo();
+    updateWählbar();
+
+    // Falls dies der letzte Wurf war → Hinweistext setzen
+    if (game.rwurf >= 3) {
+      const info = document.getElementById("info");
+      if (info) {
+        info.innerText = "⚠️ Du hast 3-mal gewürfelt. Wähle jetzt eine Kategorie zum Eintragen!";
+        info.style.color = "#ffeb3b";
+        info.style.fontWeight = "bold";
+      }
+      if (wurfBtn) wurfBtn.disabled = true;
+    } else {
+      if (wurfBtn) wurfBtn.disabled = false;
+    }
+  }, 500);
+}
+
+  
+
+/* ----------------------
+   UI Updates: Info / Wahlbarkeit / Summen
+   ---------------------- */
+function updateInfo(){
+  const info = document.getElementById("info");
+  const name = game.getCurrentPlayer() || 'Kein Spieler';
+  if (info) info.innerText = `${name} ist am Zug. Wurf ${game.rwurf}/3. Wähle eine Kategorie, um Punkte einzutragen.`;
+}
+
+
+function updateWählbar(){
+  const table = document.querySelector("#scoreTable table");
+  if (!table) return;
+  const tbody = table.tBodies[0];
+  if (!tbody) return;
+
+  KATEGORIEN.forEach((kat, r) => {
+    game.spieler.forEach((sp, c) => {
+      const row = tbody.rows[r];
+      if (!row) return;
+      const cell = row.cells[c+1];
+      if (!cell) return;
+      cell.classList.remove("wählbar"); cell.classList.remove("used");
+      if (game.verwendeteKategorien[sp].has(kat)) cell.classList.add("used");
+      else if (sp === game.getCurrentPlayer() && game.rwurf > 0 && !game.gameOver) cell.classList.add("wählbar");
+    });
+  });
+}
+
+function updateSumsAndCheckEnd(table){
+  const tbody = table.tBodies[0];
+  if (!tbody) return;
+  const idxObere = KATEGORIEN.length;
+
+  game.spieler.forEach((sp, colIdx0) => {
+    const colIndex = colIdx0 + 1;
+    let obereSumme = 0;
+
+    ["1er","2er","3er","4er","5er","6er"].forEach(k => {
+      const r = KATEGORIEN.indexOf(k);
+      const val = (tbody.rows[r] && tbody.rows[r].cells[colIndex]) ? tbody.rows[r].cells[colIndex].innerText : "-";
+      obereSumme += parseInt(val) || 0;
+    });
+
+    if (tbody.rows[idxObere] && tbody.rows[idxObere].cells[colIndex]) {
+      tbody.rows[idxObere].cells[colIndex].innerText = obereSumme;
+      tbody.rows[idxObere].cells[colIndex].className = "summe";
+    }
+
+    let bonus = obereSumme >= 63 ? 35 : 0;
+    if (tbody.rows[idxObere+1] && tbody.rows[idxObere+1].cells[colIndex]) {
+      tbody.rows[idxObere+1].cells[colIndex].innerText = bonus;
+      tbody.rows[idxObere+1].cells[colIndex].className = "bonus";
+    }
+
+    let untereSumme = 0;
+    ["Dreierpasch","Viererpasch","Full House","Kleine Straße","Große Straße","Kniffel","Chance"].forEach(k => {
+      const r = KATEGORIEN.indexOf(k);
+      const val = (tbody.rows[r] && tbody.rows[r].cells[colIndex]) ? tbody.rows[r].cells[colIndex].innerText : "-";
+      untereSumme += parseInt(val) || 0;
+    });
+
+    if (tbody.rows[idxObere+2] && tbody.rows[idxObere+2].cells[colIndex]) {
+      tbody.rows[idxObere+2].cells[colIndex].innerText = untereSumme;
+      tbody.rows[idxObere+2].cells[colIndex].className = "summe";
+    }
+
+    if (tbody.rows[idxObere+3] && tbody.rows[idxObere+3].cells[colIndex]) {
+      tbody.rows[idxObere+3].cells[colIndex].innerText = obereSumme + bonus + untereSumme;
+      tbody.rows[idxObere+3].cells[colIndex].className = "summe";
+    }
+  });
+
+  // Spielende prüfen
+if (game.isGameOver()){
+  const idxTotal = idxObere + 3;
+  let maxPunkte = -1, gewinner = [];
+  game.spieler.forEach((sp, idx) => {
+    const colIndex = idx + 1;
+    const gesamt = parseInt((tbody.rows[idxTotal] && tbody.rows[idxTotal].cells[colIndex]) ? tbody.rows[idxTotal].cells[colIndex].innerText : 0) || 0;
+    if (gesamt > maxPunkte) { maxPunkte = gesamt; gewinner = [sp]; }
+    else if (gesamt === maxPunkte) gewinner.push(sp);
+  });
+
+  // optional: alle Spieler als gespielte Runden zählen (uncomment, falls gewünscht)
+// incrementGamesForAll(game.spieler);
+
+// Speicherung der Gewinner (mit optionaler Bestscore-Übergabe)
+const best = maxPunkte || 0;
+gewinner.forEach(name => { recordWin(name, best); });
+
+  // UI setzen: Spiel beendet (DOM vorbereiten)
+  game.rwurf = 0; game.wurfInAktion = false; game.gameOver = true;
+
+  // Buttons/Interaktionen deaktivieren
+  if (wurfBtn) wurfBtn.disabled = true;
+  if (neuBtn) neuBtn.disabled = false; // Neues Spiel darf aktiv bleiben
+  if (abbrechenBtn) abbrechenBtn.disabled = true;
+  if (beendenBtn) beendenBtn.disabled = false;
+  if (hilfeBtn) hilfeBtn.disabled = false;
+
+  // Info-Text setzen (sichtbar unter den Würfeln)
+  const infoEl = document.getElementById("info");
+  if (infoEl) {
+    infoEl.innerText = "Spiel beendet.";
+    infoEl.style.color = "#fffde7";
+    infoEl.style.fontWeight = "bold";
+  }
+
+  // kleine Verzögerung, damit DOM-Änderungen gerendert werden, bevor Alerts kommen
+  setTimeout(() => {
+    alert(`🎉 Spiel beendet! Gewinner: ${gewinner.join(", ")} mit ${maxPunkte} Punkten!`);
+    let statistik = "🏅 Aktuelle Gesamtstatistik:\n\n";
+    const allScores = loadScores();
+    game.spieler.forEach(name => {
+      const id = normalizeId(name);
+      const entry = allScores.find(e => e.id === id);
+      const siege = entry ? (entry.wins || 0) : 0;
+      statistik += `${name}: ${siege} Siege\n`;
+});
+alert(statistik);
+
+
+    if (confirm("Möchtet ihr ein neues Spiel starten?")){
+      // Reset und neues Spiel starten
+      game.gameOver = false;
+      if (wurfBtn) wurfBtn.disabled = false;
+      // mache Info wieder neutral bevor neues Spiel startet
+      if (infoEl) infoEl.innerText = "";
+      startNewGame();
+    } else {
+      // Kein neues Spiel: Info bleibt unter den Würfeln, Würfel bleiben gesperrt
+      if (infoEl) {
+        infoEl.innerText = "Spiel beendet. Danke fürs Spielen!";
+        infoEl.style.color = "#fffde7";
+        infoEl.style.fontWeight = "bold";
+      }
+      // Optional: Tabelle visuell hervorheben (z. B. leicht gedimmt)
+      const scoreTable = document.getElementById('scoreTable');
+      if (scoreTable) scoreTable.style.opacity = '0.95';
+
+      // stelle sicher, dass Würfel als deaktiviert gerendert sind
+      renderDice();
+    }
+  }, 50);
+
+  return;
+}
+
+
+  
+}
+
+/* ----------------------
+   Initialisierung (erste Darstellung)
+   ---------------------- */
+renderDice();
+updateInfo();
+
+</script>
+</body>
+</html>
