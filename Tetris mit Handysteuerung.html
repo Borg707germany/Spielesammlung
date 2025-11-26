@@ -110,28 +110,25 @@
 
 /* --- RESPONSIVE LAYOUT FÜR MOBILE GERÄTE --- */
 @media (max-width: 900px) {
-
     html, body {
         height: 100%;
-        overflow: hidden !important;   /* Kein Scrollen */
+        overflow: hidden !important;
     }
 
     body {
-        flex-direction: row;           /* Canvas + Sidebar nebeneinander */
+        flex-direction: row;
         justify-content: center;
         align-items: center;
         padding: 0;
         gap: 10px;
     }
 
-    /* Spielfeld */
     canvas#tetris {
         width: 60vw !important;
         height: auto !important;
         max-height: 90vh;
     }
 
-    /* Sidebar rechts (Score, Level, Preview, Highscores) */
     #sidebar {
         width: 30vw;
         max-height: 90vh;
@@ -143,13 +140,16 @@
         font-size: 16px;
     }
 
-    /* Highscores statt links jetzt im Sidebar sichtbar */
     #leftside {
-        display: none;  /* Linke Highscore-Spalte ausblenden */
+        display: none; 
     }
 
     #help {
-        display: none;  /* Hilfe-Text komplett ausblenden */
+        display: none;
+    }
+
+    #mobileHighscores {
+        display: block !important;
     }
 
     #preview {
@@ -157,7 +157,6 @@
         height: auto !important;
     }
 
-    /* Mobile Buttons */
     #mobileControls {
         display: flex !important;
         position: fixed;
@@ -212,6 +211,11 @@
   <div id="score">Score: 0</div>
   <div id="level">Level: 1</div>
   <canvas id="preview" width="100" height="300"></canvas>
+  <!-- Highscores für Mobil -->
+  <div id="mobileHighscores" style="text-align:center; width:100%;">
+      <h3>Highscores</h3>
+      <ol id="highscoreListMobile"></ol>
+  </div>
   <div id="help">
     <h3>Steuerung</h3>
     <ul>
@@ -486,13 +490,18 @@ function updateScore(){
 }
 
 function updateHighscoreList() {
-  const list = document.getElementById('highscoreList');
-  list.innerHTML = "";
+  const desktopList = document.getElementById('highscoreList');
+  const mobileList = document.getElementById('highscoreListMobile');
+
+  if (desktopList) desktopList.innerHTML = "";
+  if (mobileList) mobileList.innerHTML = "";
 
   highscores.slice(0,10).forEach(entry => {
     const li = document.createElement('li');
     li.textContent = `${entry.name}: ${entry.score}`;
-    list.appendChild(li);
+
+    if (desktopList) desktopList.appendChild(li.cloneNode(true));
+    if (mobileList) mobileList.appendChild(li.cloneNode(true));
   });
 }
 
