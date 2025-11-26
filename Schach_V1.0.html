@@ -5,32 +5,38 @@
 <title>Schachspiel - Vollversion</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-  body { font-family: system-ui, Arial, sans-serif; display:flex; flex-direction:column; align-items:center; margin:0; padding:20px; background:#f6f6f6; }
-  #chessboard { display:grid; grid-template-columns: repeat(8, 60px); grid-template-rows: repeat(8, 60px); gap:0; margin-top:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15); }
-  .square { width:60px; height:60px; display:flex; justify-content:center; align-items:center; font-size:32px; cursor:pointer; user-select:none; }
-  .light { background:#f0d9b5; color:#222; }
-  .dark { background:#b58863; color:#fff; }
-  .selected { outline:3px solid #ffd54f; z-index:2; }
-  .move-option { outline:3px solid #8bc34a; }
-  //#start-screen,#setup-screen { display:flex; flex-direction:column; align-items:center; gap:10px; margin-top:24px; }
-  /* --- Startscreen schöner gestalten --- */
+  /* -------------------------
+     Globales Layout & Body
+     ------------------------- */
+  body {
+    font-family: system-ui, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 20px;
+    background: #f6f6f6;
+  }
+
+  /* -------------------------
+     Start- & Setup-Screens
+     (unverändert, nur responsive Schriftgrößen)
+     ------------------------- */
   #start-screen {
-    background: linear-gradient(135deg, #f0d9b5, #b58863); /* Schachbrett-Farben */
+    background: linear-gradient(135deg, #f0d9b5, #b58863);
     padding: 40px;
     border-radius: 12px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.25);
     text-align: center;
-    animation: fadeIn 1s ease; /* sanftes Einblenden */
+    animation: fadeIn 1s ease;
     display: flex;
     flex-direction: column;
     align-items: center;
-
-    
   }
 
   #start-screen h1 {
-    font-family: 'Georgia', serif; /* elegante Schrift */
-    font-size: 2.2em;
+    font-family: 'Georgia', serif;
+    font-size: clamp(1.4rem, 2.2vw, 2.2em);
     margin-bottom: 20px;
     color: #3e2723;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
@@ -48,22 +54,14 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
 
-  #start-screen button:hover {
-    background: #ffd54f; /* Goldgelb beim Hover */
-    transform: scale(1.05);
-  }
+  #start-screen button:hover { background: #ffd54f; transform: scale(1.05); }
+  #start-screen button:active { transform: scale(0.95); }
 
-  #start-screen button:active {
-    transform: scale(0.95);
-  }
-
-  /* sanfte Einblend-Animation */
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* --- Setup-Screen schöner gestalten --- */
   #setup-screen {
     background: linear-gradient(135deg, #e0e0e0, #ffffff);
     padding: 30px;
@@ -73,15 +71,8 @@
     animation: fadeIn 0.8s ease;
   }
 
-  #setup-screen label {
-    font-weight: bold;
-    color: #3e2723;
-    margin: 12px 0;
-    display: block;
-  }
-
-  #setup-screen input,
-  #setup-screen select {
+  #setup-screen label { font-weight: bold; color: #3e2723; margin: 12px 0; display: block; }
+  #setup-screen input, #setup-screen select {
     padding: 8px 12px;
     border: 2px solid #3e2723;
     border-radius: 6px;
@@ -102,22 +93,17 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
 
-  #setup-screen button:hover {
-    background: #8bc34a; /* Grün als Bestätigung */
-    color: #fff;
-    transform: scale(1.05);
-  }
+  #setup-screen button:hover { background: #8bc34a; color: #fff; transform: scale(1.05); }
+  #setup-screen button:active { transform: scale(0.95); }
 
-  #setup-screen button:active {
-    transform: scale(0.95);
-  }
-
+  /* -------------------------
+     Info-Bar, Log & Modals
+     ------------------------- */
   #info-bar { display:flex; gap:12px; align-items:center; margin-top:12px; }
-  input,select,button { font-size:16px; padding:8px; }
-  
-  /* --- Info-Bar Styling --- */
+  input, select, button { font-size:16px; padding:8px; }
+
   #info-bar {
-    background: #3e2723; /* dunkles Braun, passend zum Schachbrett */
+    background: #3e2723;
     color: #fff;
     padding: 10px 20px;
     border-radius: 8px;
@@ -134,27 +120,43 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
+  #info-bar button:hover { background: #ffd54f; transform: scale(1.05); }
 
-  #info-bar button:hover {
-    background: #ffd54f;
-    transform: scale(1.05);
+  #log {
+    margin-top:16px;
+    max-width:480px;
+    width:100%;
+    background:#fff8e1;
+    padding:16px;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    font-family: 'Courier New', monospace;
+    max-height: 520px;
+    overflow-y: auto;
   }
 
-  #log { margin-top:16px; max-width:480px; width:100%; background:#fff; padding:8px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
-  #moves { font-family:monospace; white-space:pre-wrap; word-break:break-word; }
+  #log strong { font-size: 1.2em; color: #3e2723; display:block; margin-bottom:8px; }
+  #moves {
+    max-height:520px;
+    overflow:auto;
+    font-size:14px;
+    line-height:1.4;
+    color:#212121;
+    padding:8px;
+    background:#ffffff;
+    border-radius:8px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+  }
+
   .modal { position:fixed; left:0; right:0; top:0; bottom:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); }
-  .modal-box { background:#fff; padding:16px; border-radius:8px; box-shadow:0 6px 20px rgba(0,0,0,0.2); }
-  
-  /* --- Modals schöner gestalten --- */
   .modal-box {
-    background: #fff8e1; /* helles Beige */
+    background: #fff8e1;
     padding: 24px;
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.3);
     text-align: center;
     animation: fadeIn 0.5s ease;
   }
-
   .modal-box button {
     background: #fff;
     border: 2px solid #3e2723;
@@ -165,17 +167,10 @@
     cursor: pointer;
     transition: all 0.3s ease;
   }
+  .modal-box button:hover { background: #8bc34a; color: #fff; transform: scale(1.05); }
 
-  .modal-box button:hover {
-    background: #8bc34a; /* Grün für Bestätigung */
-    color: #fff;
-    transform: scale(1.05);
-  }
-
-  //.promo-buttons button { margin:6px; }
-  /* --- Promotion Buttons schöner gestalten --- */
   .promo-buttons button {
-    font-size: 1.6em; /* große Symbole */
+    font-size: 1.6em;
     padding: 12px 20px;
     margin: 8px;
     border: 2px solid #3e2723;
@@ -185,154 +180,139 @@
     transition: all 0.3s ease;
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   }
+  .promo-buttons button:hover { background: #ffd54f; transform: scale(1.1); }
+  .promo-buttons button:active { transform: scale(0.95); }
 
-  .promo-buttons button:hover {
-    background: #ffd54f;
-    transform: scale(1.1);
+  #main-area { display:flex; gap:16px; align-items:flex-start; margin-top:16px; }
+  #board-wrapper { display:flex; justify-content:center; align-items:flex-start; background: #fafafa; padding: 20px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
+
+  /* -------------------------
+     Responsive Chessboard CSS
+     (kompletter Ersatz für feste 60px/480px Werte)
+     ------------------------- */
+  #board-container {
+    position: relative;
+    display: inline-block;
+    width: min(520px, 96vw);
   }
 
-  .promo-buttons button:active {
-    transform: scale(0.95);
+  #chessboard {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 0;
+    width: min(480px, 92vw); /* max 480px, sonst 92% Viewport */
+    aspect-ratio: 1 / 1;     /* Brett bleibt quadratisch */
+    max-width: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 6px;
+    overflow: hidden;
   }
 
-#main-area { display:flex; gap:16px; align-items:flex-start; margin-top:16px; }
-#log { background:#fff; padding:8px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
-/* --- Zugliste schöner gestalten --- */
-#log {
-  background: #fff8e1; /* warmes Beige */
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  font-family: 'Courier New', monospace;
-  max-height: 520px;
-  overflow-y: auto;
-}
+  .square {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1 / 1; /* Feld quadratisch */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(18px, 3.5vw, 32px); /* skaliert Symbolgröße */
+    cursor: pointer;
+    user-select: none;
+    padding: 6px; /* größeres Touch-Ziel */
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
 
-#log strong {
-  font-size: 1.2em;
-  color: #3e2723;
-  display: block;
-  margin-bottom: 8px;
-}
+  .light { background:#f0d9b5; color:#222; }
+  .dark  { background:#b58863; color:#fff; }
 
-#moves {
-  max-height:520px; 
-  overflow:auto; 
-  font-size:14px;
-  font-size: 14px;
-  line-height: 1.4;
-  color: #212121;
-  padding: 8px;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
-}
-#board-wrapper { display:flex; justify-content:center; align-items:flex-start; background: #fafafa;  padding: 20px;  border-radius: 12px;  box-shadow: 0 6px 20px rgba(0,0,0,0.2);}
-@media (max-width:800px) {
-  #main-area { flex-direction:column; }
-  #log { width:100%; order:2; }
-  #board-wrapper { order:1; }
-}
+  .selected { outline: 3px solid #ffd54f; z-index: 2; }
+  .move-option { outline: 3px solid #8bc34a; }
 
-/* --- Timer Styling --- */
-#timer {
-  font-size: 1.2em;
-  font-weight: bold;
-  color: #ffd54f; /* Goldgelb für Aufmerksamkeit */
-  background: #212121;
-  padding: 4px 10px;
-  border-radius: 6px;
-  box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
-}
+  /* Ränge (links vom Brett) */
+  .ranks {
+    position: absolute;
+    left: -34px;
+    top: 0;
+    display: grid;
+    grid-template-rows: repeat(8, 1fr);
+    height: 100%;
+    font-weight: bold;
+    color: #3e2723;
+    pointer-events: none;
+  }
+  .ranks span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(12px, 2.2vw, 16px);
+    padding-bottom: 4px;
+  }
 
-/* --- Spielstatus Styling --- */
-#status {
-  font-size: 1.2em;
-  font-weight: bold;
-  padding: 4px 12px;
-  border-radius: 6px;
-  margin-left: 12px;
-  transition: all 0.3s ease;
-}
+  /* Dateien (unter dem Brett) */
+  .files {
+    width: min(480px, 92vw);
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    margin-top: 6px;
+    text-align: center;
+    font-weight: bold;
+    color: #3e2723;
+  }
+  .files span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(12px, 2.2vw, 16px);
+  }
 
-/* verschiedene Statusfarben */
-#status.check {
-  background: #ffeb3b; /* Gelb für Schach */
-  color: #000;
-}
+  /* -------------------------
+     Timer & Status Styling
+     ------------------------- */
+  #timer {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #ffd54f;
+    background: #212121;
+    padding: 4px 10px;
+    border-radius: 6px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
+  }
 
-#status.mate {
-  background: #d32f2f; /* Rot für Schachmatt */
-  color: #fff;
-}
+  #status {
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 6px;
+    margin-left: 12px;
+    transition: all 0.3s ease;
+  }
+  #status.check { background: #ffeb3b; color: #000; }
+  #status.mate  { background: #d32f2f; color: #fff; }
+  #status.draw  { background: #607d8b; color: #fff; }
+  #endgame-symbol { font-size: 3em; margin-bottom: 12px; text-shadow: 2px 2px 6px rgba(0,0,0,0.3); }
+  #status.timeout { background: #f57c00; color: #fff; }
 
-#status.draw {
-  background: #607d8b; /* Grau für Remis */
-  color: #fff;
-}
+  /* -------------------------
+     Responsive Anpassungen
+     ------------------------- */
+  @media (max-width: 800px) {
+    #main-area { flex-direction: column; }
+    #log { width: 100%; order: 2; }
+    #board-wrapper { order: 1; }
+  }
 
-#endgame-symbol {
-  font-size: 3em;
-  margin-bottom: 12px;
-  text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-}
+  @media (max-width: 420px) {
+    #board-container { width: 92vw; }
+    .square { padding: 8px; }
+    .ranks { left: -30px; }
+    #start-screen { padding: 24px; }
+    #start-screen h1 { font-size: 1.2rem; }
+  }
 
-#status.timeout {
-  background: #f57c00; /* Orange */
-  color: #fff;
-}
-
-#start-screen > div {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.start-buttons {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-#board-container {
-  position: relative;
-  display: inline-block;
-}
-
-.ranks {
-  position: absolute;
-  top: 0;
-  left: -15px; /* Abstand links vom Brett */
-  display: grid;
-  grid-template-rows: repeat(8, 60px);
-  height: 480px; /* 8 Reihen × 60px */
-  font-weight: bold;
-  color: #3e2723;
-}
-
-.ranks span {
-  height: 60px;              /* gleiche Höhe wie ein Feld */
-  display: flex;
-  align-items: flex-end;     /* nach unten ausrichten */
-  justify-content: center;   /* horizontal mittig */
-  padding-bottom: 4px;       /* kleiner Abstand vom unteren Rand */
-  font-size: 16px;
-}
-
-.files {
-  display: grid;
-  grid-template-columns: repeat(8, 60px);
-  width: 480px; /* 8 Spalten × 60px */
-  margin-top: 4px;
-  text-align: center;
-  font-weight: bold;
-  color: #3e2723;
-}
-
+  /* kleine optische Feinheiten */
+  .promo-buttons { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
 </style>
 </head>
 <body>
@@ -863,7 +843,7 @@ function generateBoard(){
         // Stelle sicher, dass leere Felder keine Inline-Farbe erben
         sq.style.color = '';
       }
-      sq.addEventListener('click', ()=>handleClick(sq));
+      sq.addEventListener('pointerdown', (e) => { e.preventDefault(); handleClick(sq); });
       chessboard.appendChild(sq);
     }
   }
