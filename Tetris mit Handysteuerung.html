@@ -14,7 +14,11 @@
     color:#fff;
     font-family:sans-serif;
     margin:0;
+    
+    /* WICHTIG für mobile Buttons */
+    position: relative;
   }
+  
   canvas { background:#000; border:2px solid #fff; }
   #sidebar { display:flex; flex-direction:column; align-items:center; gap:10px; }
   #score { font-size:20px; }
@@ -85,12 +89,13 @@
   #mobileControls {
     display: none;
     position: fixed;
-    bottom: 20px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
-    gap: 10px;
-    z-index: 50;
+    z-index: 9999;     /* WICHTIG */
+    pointer-events: auto;
   }
+
 
   #mobileControls .ctrl {
     background: #333;
@@ -200,6 +205,15 @@
     display:none;
 ">
   <div>PAUSE</div>
+</div>
+
+<!-- MOBILE TOUCH STEUERUNG -->
+<div id="mobileControls">
+    <button class="ctrl" id="btnLeft">◀</button>
+    <button class="ctrl" id="btnRight">▶</button>
+    <button class="ctrl" id="btnRotate">⟳</button>
+    <button class="ctrl" id="btnDown">↓</button>
+    <button class="ctrl" id="btnDrop">⤓</button>
 </div>
 
 <script>
@@ -636,7 +650,7 @@ restartBtn.addEventListener('click', ()=>{
 });
 
 /* ---------- MOBILE BUTTON STEUERUNG ---------- */
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isMobile = window.matchMedia("(max-width: 900px)").matches;
 
 if (isMobile) {
     document.getElementById("mobileControls").style.display = "flex";
@@ -664,14 +678,5 @@ document.getElementById("btnDrop").addEventListener("touchstart", () => {
 });
 
 </script>
-<!-- MOBILE TOUCH STEUERUNG -->
-<div id="mobileControls">
-    <button class="ctrl" id="btnLeft">◀</button>
-    <button class="ctrl" id="btnRight">▶</button>
-    <button class="ctrl" id="btnRotate">⟳</button>
-    <button class="ctrl" id="btnDown">↓</button>
-    <button class="ctrl" id="btnDrop">⤓</button>
-</div>
-
 </body>
 </html>
