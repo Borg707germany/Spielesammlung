@@ -172,6 +172,14 @@
         padding: 14px 18px;
         min-width: 55px;
     }
+        
+    #backToCollection {
+        width: 90%;        /* Button fast volle Breite */
+        font-size: 16px;   /* gut lesbar */
+        margin-bottom: 12px; /* Abstand zu Highscore-Liste */
+        padding: 8px 0;     /* etwas größere Fläche zum Tippen */
+        cursor: pointer;
+    }
 }
 
 /* Sehr kleine Handys */
@@ -197,6 +205,11 @@
 <body>
   
 <div id="leftside">
+  <!-- Neuer Button für Sammlung -->
+  <button id="backToCollection" style="margin-bottom:10px; padding:5px 10px; cursor:pointer;">
+    Zurück zur Sammlung
+  </button>
+  
   <h2>Highscores</h2>
   <ol id="highscoreList"></ol>
   
@@ -515,6 +528,12 @@ document.getElementById('resetHighscoresBtn').addEventListener('click', () => {
     updateHighscoreList();
   }
 });
+
+document.getElementById('backToCollection').addEventListener('click', () => {
+    // Hier die URL zu deiner Spielesammlung einfügen:
+    window.location.href = "https://borg707germany.github.io/Spielesammlung/";
+});
+
 
 function animateScore(points, rows=1){
   const canvasRect = canvas.getBoundingClientRect();
