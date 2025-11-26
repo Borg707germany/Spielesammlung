@@ -135,84 +135,85 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
 
-  /* Name-Felder Container */
+  /* Setup: responsive Name-Felder */
   #name-fields {
     display: flex;
     flex-direction: column;
     gap: 10px;
     width: 100%;
+    align-items: stretch;
   }
-  #name-fields.row { flex-direction: row; gap: 12px; }
   #name-fields input {
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 12px;
     font-size: 1rem;
     border-radius: 8px;
     border: 2px solid #3e2723;
     background: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-    overflow-wrap: break-word;
   }
 
-  /* Radio-Buttons als größere Touch-Optionen */
-  #setup-screen .color-choice {
-    display:flex;
-    gap:12px;
-    align-items:center;
-    justify-content:center;
-    margin-top:8px;
-    flex-wrap:wrap;
-  }
-  #setup-screen .color-choice label {
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 12px;
-    border-radius:8px;
-    border: 2px solid transparent;
-    cursor:pointer;
-    user-select:none;
-    transition: background .15s ease, border-color .15s ease;
-  }
-  #setup-screen .color-choice input[type="radio"] { transform: scale(1.1); }
-
-  /* Visuelles Feedback für ausgewählte Radio-Option */
-  #setup-screen .color-choice input[type="radio"]:checked + span,
-  #setup-screen .color-choice input[type="radio"]:checked + label {
-    background: #8bc34a;
-    color: #fff;
-    border-color: #3e2723;
+  /* Auf größeren Bildschirmen: zwei Spalten nebeneinander */
+  @media (min-width: 700px) {
+    #name-fields.row { flex-direction: row; }
+    #name-fields.row input {
+      flex: 1 1 0;
+      min-width: 0;
+    }
   }
 
+  /* Buttons/Actions: erlauben, dass sie umbrechen und responsive bleiben */
   #setup-screen .actions {
-    display:flex;
-    gap:12px;
-    justify-content:center;
-    margin-top:12px;
-    flex-wrap:wrap;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
   }
   #setup-screen .actions button {
     padding: 12px 18px;
     font-size: 1rem;
     border-radius: 8px;
     min-width: 140px;
+    box-sizing: border-box;
+  }
+
+  /* Radio-Optionen */
+  #setup-screen .color-choice label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  #setup-screen .color-choice input[type="radio"] { transform: scale(1.1); }
+
+  /* Visuelles Feedback für ausgewählte Radio-Option
+     passt zu Struktur: <label><input/><span>Text</span></label> */
+  #setup-screen .color-choice label input[type="radio"]:checked + span {
+    background: #8bc34a;
+    color: #fff;
+    border-color: #3e2723;
+    padding: 6px 10px;
+    border-radius: 6px;
   }
 
   /* Mobile: Buttons stapeln und volle Breite */
   @media (max-width: 520px) {
-    .start-buttons {
-      flex-direction: column;
-      width: 100%;
-      gap: 10px;
-    }
+    .start-buttons { flex-direction: column; width: 100%; gap: 10px; }
     #start-screen .start-buttons button {
       width: 100%;
       min-width: 0;
       padding: 16px;
       font-size: 1.05rem;
     }
-    #setup-screen .actions { flex-direction: column; width:100%; }
-    #setup-screen .actions button { width:100%; }
+    #setup-screen .actions { flex-direction: column; width: 100%; }
+    #setup-screen .actions button { width: 100%; }
     #setup-screen { padding: 20px; }
   }
 
@@ -309,19 +310,27 @@
   /* -------------------------
      Responsive Chessboard CSS
      ------------------------- */
+  /* Board-Container als Grid: links Ränge, rechts Brett */
   #board-container {
-    position: relative;
-    display: inline-block;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: start;
     width: min(520px, 96vw);
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto;
+    position: relative;
   }
 
+  /* Brett in der rechten Grid-Spalte, volle Breite der Spalte */
   #chessboard {
+    grid-column: 2 / 3;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     gap: 0;
-    width: min(480px, 92vw);
+    width: 100%;
     aspect-ratio: 1 / 1;
-    max-width: 100%;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border-radius: 6px;
     overflow: hidden;
@@ -349,16 +358,17 @@
   .selected { outline: 3px solid #ffd54f; z-index: 2; }
   .move-option { outline: 3px solid #8bc34a; }
 
+  /* Ränge jetzt statisch in der linken Grid-Spalte */
   .ranks {
-    position: absolute;
-    left: -34px;
-    top: 0;
+    position: static;
     display: grid;
-    grid-template-rows: repeat(8, 1fr);
-    height: 100%;
+    grid-auto-rows: 1fr;
+    height: auto;
+    align-self: start;
     font-weight: bold;
     color: #3e2723;
     pointer-events: none;
+    margin-top: 0.25rem;
   }
   .ranks span {
     display: flex;
@@ -367,9 +377,11 @@
     font-size: clamp(12px, 2.2vw, 16px);
     padding-bottom: 4px;
   }
-
+  
+  /* Dateien direkt unter dem Brett, zentriert zur rechten Grid-Spalte */
   .files {
-    width: min(480px, 92vw);
+    grid-column: 2 / 3;
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     margin-top: 6px;
@@ -1015,6 +1027,16 @@ function generateBoard(){
       chessboard.appendChild(sq);
     }
   }
+  syncRanksToBoard();
+}
+
+// Synchronisiert die Höhe der Ränge mit der Feldhöhe des Brettes
+function syncRanksToBoard(){
+  const board = document.getElementById('chessboard');
+  const ranks = document.querySelectorAll('.ranks span');
+  if (!board || ranks.length !== 8) return;
+  const fieldHeight = board.clientHeight / 8;
+  ranks.forEach(r => r.style.height = fieldHeight + 'px');
 }
 
 /* -----------------------
@@ -1883,6 +1905,7 @@ document.addEventListener('click', (e)=>{
    ----------------------- */
 window._board = board;
 window._state = state;
+window.addEventListener('resize', () => { setTimeout(syncRanksToBoard, 80); });
 
 </script>
 </body>
