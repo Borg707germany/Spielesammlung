@@ -20,7 +20,6 @@
 
   /* -------------------------
      Start- & Setup-Screens
-     (unverändert, nur responsive Schriftgrößen)
      ------------------------- */
   #start-screen {
     background: linear-gradient(135deg, #f0d9b5, #b58863);
@@ -188,7 +187,6 @@
 
   /* -------------------------
      Responsive Chessboard CSS
-     (kompletter Ersatz für feste 60px/480px Werte)
      ------------------------- */
   #board-container {
     position: relative;
@@ -200,8 +198,8 @@
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     gap: 0;
-    width: min(480px, 92vw); /* max 480px, sonst 92% Viewport */
-    aspect-ratio: 1 / 1;     /* Brett bleibt quadratisch */
+    width: min(480px, 92vw);
+    aspect-ratio: 1 / 1;
     max-width: 100%;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border-radius: 6px;
@@ -211,14 +209,14 @@
   .square {
     width: 100%;
     height: 100%;
-    aspect-ratio: 1 / 1; /* Feld quadratisch */
+    aspect-ratio: 1 / 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: clamp(18px, 3.5vw, 32px); /* skaliert Symbolgröße */
+    font-size: clamp(18px, 3.5vw, 32px);
     cursor: pointer;
     user-select: none;
-    padding: 6px; /* größeres Touch-Ziel */
+    padding: 6px;
     box-sizing: border-box;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
@@ -230,7 +228,6 @@
   .selected { outline: 3px solid #ffd54f; z-index: 2; }
   .move-option { outline: 3px solid #8bc34a; }
 
-  /* Ränge (links vom Brett) */
   .ranks {
     position: absolute;
     left: -34px;
@@ -250,7 +247,6 @@
     padding-bottom: 4px;
   }
 
-  /* Dateien (unter dem Brett) */
   .files {
     width: min(480px, 92vw);
     display: grid;
@@ -311,8 +307,10 @@
     #start-screen h1 { font-size: 1.2rem; }
   }
 
-  /* kleine optische Feinheiten */
   .promo-buttons { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  
+  #start-screen .start-buttons button.pressed { transform: scale(0.98); opacity: 0.95; }
+  
 </style>
 </head>
 <body>
@@ -622,6 +620,7 @@ function showSetup(){
         '</div>' +
         '<p style="margin-top:8px;">Du spielst gegen den Computer</p>';
     }
+    focusFirstSetupField();
   }
 }
 
@@ -1715,6 +1714,27 @@ document.addEventListener('click', (e)=>{
    ----------------------- */
 window._board = board;
 window._state = state;
+// 1) Fokus auf erstes Feld im Setup (aufrufen am Ende von showSetup())
+function focusFirstSetupField(){
+  setTimeout(() => {
+    const first = document.querySelector('#setup-screen input, #setup-screen select, #setup-screen button');
+    if (first) first.focus();
+  }, 120);
+}
+
+// 2) Touch-Feedback für Start-Buttons (einmalig binden)
+function bindStartButtonTouchFeedback(){
+  document.querySelectorAll('#start-screen .start-buttons button').forEach(btn => {
+    btn.addEventListener('pointerdown', () => btn.classList.add('pressed'));
+    btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
+    btn.addEventListener('pointercancel', () => btn.classList.remove('pressed'));
+  });
+}
+// rufe bindStartButtonTouchFeedback() einmal beim Laden auf:
+bindStartButtonTouchFeedback();
+
+// 3) Optional: Kontextmenü auf langem Druck verhindern (verhindert störende Menüs auf Mobil)
+document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 </script>
 </body>
 </html>
