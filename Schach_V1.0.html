@@ -87,6 +87,31 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  /* GitHub-Button: gleiche Optik wie die Spieler-Buttons */
+  #github-start-btn {
+    background: #fff;
+    color: #3e2723;
+    border: 2px solid #3e2723;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    transition: transform .12s ease, background .12s ease;
+    min-width: 220px;
+  }
+  #github-start-btn:hover {
+    background: #ffd54f; /* Goldgelb beim Hover, wie bei den Spieler-Buttons */
+    color: #3e2723;
+    transform: translateY(-3px);
+  }
+  #github-start-btn:active { transform: translateY(0); }
+
+  /* Mobile: volle Breite unter den Start-Buttons */
+  @media (max-width:520px) {
+    #github-start-btn { width: 92%; min-width: 0; padding: 14px; font-size: 1rem; }
+  }
+
   #setup-screen {
     background: linear-gradient(135deg, #e0e0e0, #ffffff);
     padding: 30px;
@@ -416,6 +441,10 @@
     <button id="one-player">👤 1 Spieler</button>
     <button id="two-player">👥 2 Spieler lokal</button>
   </div>
+  <div style="margin-top:12px; width:100%; display:flex; justify-content:center;">
+   <button id="github-start-btn" aria-label="Zurück zur Spielesammlung auf GitHub">🔗 Zur Spielesammlung</button>
+</div>
+
 </div>
 
 
@@ -736,6 +765,20 @@ if (twoBtn) twoBtn.addEventListener('click', () => {
   mode = 'local';
   showSetup();
 });
+
+// Link zur Spielesammlung auf GitHub — hier anpassen
+const GITHUB_COLLECTION_URL = 'https://borg707germany.github.io/Spielesammlung';
+
+// Event-Handler für den Startscreen-GitHub-Button
+const githubStartBtn = document.getElementById('github-start-btn');
+if (githubStartBtn) {
+  githubStartBtn.addEventListener('click', () => {
+    const leave = confirm('Zurück zur Spielesammlung auf GitHub? Dein aktuelles Spiel wird nicht gespeichert.');
+    if (!leave) return;
+    // Öffnet GitHub in neuem Tab und schützt vor opener-Schwachstelle
+    window.open(GITHUB_COLLECTION_URL, '_blank', 'noopener');
+  });
+}
 
 // Start-Button: Spiel wirklich starten
 if (startBtn) startBtn.addEventListener('click', () => {
