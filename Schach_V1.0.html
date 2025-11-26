@@ -8,6 +8,10 @@
   /* -------------------------
      Globales Layout & Body
      ------------------------- */
+  * ,
+  *::before,
+  *::after { box-sizing: border-box; }
+
   body {
     font-family: system-ui, Arial, sans-serif;
     display: flex;
@@ -53,8 +57,30 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
   }
 
-  #start-screen button:hover { background: #ffd54f; transform: scale(1.05); }
-  #start-screen button:active { transform: scale(0.95); }
+  #start-screen .start-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  #start-screen .start-buttons button {
+    min-width: 220px;
+    padding: 14px 20px;
+    font-size: clamp(1rem, 2.2vw, 1.1rem);
+    border-radius: 10px;
+    border: 2px solid #3e2723;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    transition: transform .18s ease, background .18s ease;
+  }
+
+  #start-screen .start-buttons button:hover { transform: translateY(-3px); background:#ffd54f; }
+  #start-screen .start-buttons button:active { transform: translateY(0); }
+
+  #start-screen .start-buttons button.pressed { transform: scale(0.98); opacity: 0.95; }
 
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
@@ -68,6 +94,10 @@
     box-shadow: 0 6px 20px rgba(0,0,0,0.2);
     text-align: center;
     animation: fadeIn 0.8s ease;
+    width: min(520px, 96vw);
+    max-width: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
   }
 
   #setup-screen label { font-weight: bold; color: #3e2723; margin: 12px 0; display: block; }
@@ -80,20 +110,86 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   }
 
-  #setup-screen button {
-    background: #fff;
-    border: 2px solid #3e2723;
+  /* Name-Felder Container */
+  #name-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+  #name-fields.row { flex-direction: row; gap: 12px; }
+  #name-fields input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
     border-radius: 8px;
-    padding: 10px 20px;
-    margin: 10px;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    border: 2px solid #3e2723;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    overflow-wrap: break-word;
   }
 
-  #setup-screen button:hover { background: #8bc34a; color: #fff; transform: scale(1.05); }
-  #setup-screen button:active { transform: scale(0.95); }
+  /* Radio-Buttons als größere Touch-Optionen */
+  #setup-screen .color-choice {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:center;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  #setup-screen .color-choice label {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px;
+    border-radius:8px;
+    border: 2px solid transparent;
+    cursor:pointer;
+    user-select:none;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  #setup-screen .color-choice input[type="radio"] { transform: scale(1.1); }
+
+  /* Visuelles Feedback für ausgewählte Radio-Option */
+  #setup-screen .color-choice input[type="radio"]:checked + span,
+  #setup-screen .color-choice input[type="radio"]:checked + label {
+    background: #8bc34a;
+    color: #fff;
+    border-color: #3e2723;
+  }
+
+  #setup-screen .actions {
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  #setup-screen .actions button {
+    padding: 12px 18px;
+    font-size: 1rem;
+    border-radius: 8px;
+    min-width: 140px;
+  }
+
+  /* Mobile: Buttons stapeln und volle Breite */
+  @media (max-width: 520px) {
+    .start-buttons {
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+    }
+    #start-screen .start-buttons button {
+      width: 100%;
+      min-width: 0;
+      padding: 16px;
+      font-size: 1.05rem;
+    }
+    #setup-screen .actions { flex-direction: column; width:100%; }
+    #setup-screen .actions button { width:100%; }
+    #setup-screen { padding: 20px; }
+  }
 
   /* -------------------------
      Info-Bar, Log & Modals
@@ -308,9 +404,6 @@
   }
 
   .promo-buttons { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
-  
-  #start-screen .start-buttons button.pressed { transform: scale(0.98); opacity: 0.95; }
-  
 </style>
 </head>
 <body>
@@ -608,22 +701,29 @@ function showSetup(){
   // Fülle Name-Felder abhängig vom Modus
   if (nameFields){
     if (mode === 'local'){
-      nameFields.innerHTML = '<input id="white-name" placeholder="Spieler Weiß" />' +
-                             '<input id="black-name" placeholder="Spieler Schwarz" />';
+      // zwei Eingabefelder; class 'row' erlaubt nebeneinander auf großen Bildschirmen
+      nameFields.classList.remove('single');
+      nameFields.classList.add('row');
+      nameFields.innerHTML =
+        '<input id="white-name" placeholder="Spieler Weiß" aria-label="Name Spieler Weiß" />' +
+        '<input id="black-name" placeholder="Spieler Schwarz" aria-label="Name Spieler Schwarz" />';
     } else {
       // Singleplayer: Name + Farbauswahl
+      nameFields.classList.remove('row');
+      nameFields.classList.add('single');
       nameFields.innerHTML =
-        '<input id="player-name" placeholder="Dein Name" />' +
-        '<div style="margin-top:8px;">' +
-          '<label style="margin-right:8px;"><input type="radio" name="player-color" value="white" checked /> Weiß (du)</label>' +
-          '<label><input type="radio" name="player-color" value="black" /> Schwarz (du)</label>' +
+        '<input id="player-name" placeholder="Dein Name" aria-label="Dein Name" />' +
+        '<div class="color-choice" role="radiogroup" aria-label="Wähle deine Farbe" style="margin-top:8px;">' +
+          '<label style="display:inline-flex;align-items:center;gap:8px;"><input type="radio" name="player-color" value="white" checked /> <span>Weiß (du)</span></label>' +
+          '<label style="display:inline-flex;align-items:center;gap:8px;"><input type="radio" name="player-color" value="black" /> <span>Schwarz (du)</span></label>' +
         '</div>' +
         '<p style="margin-top:8px;">Du spielst gegen den Computer</p>';
     }
   }
+
+  // Setze Fokus auf erstes Feld (verbessert mobile UX)
   focusFirstSetupField();
 }
-
 
 // Klick-Handler: 1 Spieler
 if (oneBtn) oneBtn.addEventListener('click', () => {
@@ -696,6 +796,32 @@ function cloneState(s){
     fullmoveNumber: s.fullmoveNumber
   };
 }
+// -----------------------------
+// Setup Fokus und Touch Feedback
+// -----------------------------
+
+// Fokus auf erstes Feld im Setup (wird am Ende von showSetup() aufgerufen)
+function focusFirstSetupField(){
+  setTimeout(() => {
+    const first = document.querySelector('#setup-screen input, #setup-screen select, #setup-screen button');
+    if (first) first.focus();
+  }, 120);
+}
+
+// Touch-Feedback für Start-Buttons (einmalig binden)
+function bindStartButtonTouchFeedback(){
+  document.querySelectorAll('#start-screen .start-buttons button').forEach(btn => {
+    btn.addEventListener('pointerdown', () => btn.classList.add('pressed'));
+    btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
+    btn.addEventListener('pointercancel', () => btn.classList.remove('pressed'));
+  });
+}
+
+// Optional: Kontextmenü auf langem Druck verhindern (verhindert störende Menüs auf Mobil)
+document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+
+// Rufe die Bind-Funktion einmal beim Laden auf
+bindStartButtonTouchFeedback();
 
 // Buttons Event-Handler
 if (undoBtn) undoBtn.addEventListener('click', undoMove);
@@ -1714,28 +1840,7 @@ document.addEventListener('click', (e)=>{
    ----------------------- */
 window._board = board;
 window._state = state;
-// 1) Fokus auf erstes Feld im Setup (aufrufen am Ende von showSetup())
-function focusFirstSetupField(){
-  setTimeout(() => {
-    const first = document.querySelector('#setup-screen input, #setup-screen select, #setup-screen button');
-    if (first) first.focus();
-  }, 120);
-}
 
-// 2) Touch-Feedback für Start-Buttons (einmalig binden)
-function bindStartButtonTouchFeedback(){
-  document.querySelectorAll('#start-screen .start-buttons button').forEach(btn => {
-    btn.addEventListener('pointerdown', () => btn.classList.add('pressed'));
-    btn.addEventListener('pointerup', () => btn.classList.remove('pressed'));
-    btn.addEventListener('pointercancel', () => btn.classList.remove('pressed'));
-  });
-}
-// rufe bindStartButtonTouchFeedback() einmal beim Laden auf:
-bindStartButtonTouchFeedback();
-
-// 3) Optional: Kontextmenü auf langem Druck verhindern (verhindert störende Menüs auf Mobil)
-document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
 </script>
 </body>
 </html>
-
