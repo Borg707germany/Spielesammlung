@@ -33,7 +33,7 @@ body { font-family: Arial, sans-serif; background:#1b5e20; color:white; margin:0
   justify-content: center;  /* horizontal zentriert */
   align-items: center;      /* vertikal mittig innerhalb des Containers */
   flex-wrap: nowrap;
-  gap: 6px;                /* kleiner Abstand zwischen Würfeln */
+  gap: 4px;                /* kleiner Abstand zwischen Würfeln */
   height: 200px;            /* gibt dem Container eine feste Höhe */
   margin-top: 100px;        /* verschiebt den Block optisch nach unten */
 }
@@ -195,8 +195,8 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
   }
 
   .würfel {
-    width: 6vw;
-    height: 6vw;
+    width: 12vw;
+    height: 12vw;
     max-width: 20px;       /* maximal 20px */
     max-height: 20px;
   }
@@ -214,7 +214,18 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
     font-size: 0.7rem;
     padding: 5px 8px;
   }
+ 
+  #steuerungContainer {
+    flex-wrap: wrap;       /* erlaubt Umbruch */
+    justify-content: center;
+    gap: 6px;
+  }
 
+  #steuerungContainer button {
+    flex: 1 1 45%;         /* zwei Buttons pro Reihe */
+    min-width: 100px;
+  }
+   
   body {
     overflow-x: hidden;
   }
@@ -1224,6 +1235,7 @@ updateInfo();
 </script>
 </body>
 </html>
+
 
 
 
