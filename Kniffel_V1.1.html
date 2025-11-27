@@ -213,7 +213,11 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
   }
    
   #info {
-    font-size: 0.7rem;
+    font-size: 0.7rem;line-height: 1.2;        /* engerer Zeilenabstand */
+    text-align: center;      /* mittig unter den Würfeln */
+    max-width: 90%;          /* begrenzt die Breite */
+    word-wrap: break-word;   /* bricht lange Wörter */
+    white-space: normal;     /* erlaubt Umbruch */
   }
 
   button {
@@ -1241,6 +1245,7 @@ updateInfo();
 </script>
 </body>
 </html>
+
 
 
 
