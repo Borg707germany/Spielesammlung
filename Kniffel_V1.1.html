@@ -168,7 +168,7 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
   #highscoreTitle { font-size:1.05rem; }
 }
    
-/* Responsive: Scoreboard und Spielfeld kleiner nebeneinander */
+/* Kompakt-Layout für Smartphones im Hochformat */
 @media (max-width: 768px) {
   #main {
     flex-direction: row;   /* nebeneinander auch mobil */
@@ -177,34 +177,44 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
   }
 
   #scoreboard {
-    width: 35%;            /* kleiner als vorher */
+    width: 40%;            /* Scoreboard links */
     max-width: none;
     overflow-x: auto;
+    font-size: 0.7rem;     /* Schrift kleiner */
   }
 
   #scoreboard table {
     width: 100%;
-    min-width: 240px;      /* kleinere Mindestbreite */
-    font-size: 0.8rem;     /* Schrift kleiner */
+    min-width: 200px;
+    font-size: 0.65rem;
   }
 
   #game {
     flex: 1;
-    width: 65%;            /* Spielfeld etwas kleiner */
+    width: 60%;            /* Spielfeld rechts */
   }
 
   .würfel {
-    width: 14vw;           /* Würfel kleiner machen */
-    height: 14vw;
-    max-width: 60px;       /* maximal 60px */
-    max-height: 60px;
+    width: 8vw;
+    height: 8vw;
+    max-width: 20px;       /* maximal 20px */
+    max-height: 20px;
+  }
+
+  #info {
+    font-size: 0.7rem;
+  }
+
+  button {
+    font-size: 0.7rem;
+    padding: 5px 8px;
   }
 
   body {
     overflow-x: hidden;
   }
 }
-   
+  
   #game {
     flex: 1;
     width: 60%;            /* Spielfeld nimmt Rest ein */
@@ -1209,5 +1219,6 @@ updateInfo();
 </script>
 </body>
 </html>
+
 
 
