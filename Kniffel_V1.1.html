@@ -193,25 +193,25 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
     flex: 1;
     width: 50%;            /* Spielfeld rechts */
   }
-   #würfelContainer {
-      gap: 2px;              /* sehr enger Abstand */
-      height: auto;          /* keine feste Höhe, passt sich an */
-      margin-top: 20px;      /* weniger Abstand nach oben */
-  }
-   
-  .würfel {
-    margin: 2px;           /* Abstand pro Würfel */
-    width: 14vw;
-    height: 14vw;
-    max-width: 28px;       /* maximal 28px */
-    max-height: 28px;
-  }
-   
-   .dot {
-      width: 2px;   /* kleiner Punkt */
-      height: 2px;
+  #würfelContainer {
+    gap: 2px;              /* enger Abstand */
+    height: auto;          /* keine feste Höhe */
+    margin-top: 30px;      /* kompakter Abstand nach oben */
   }
 
+  .würfel {
+    width: 14vw;           /* etwas größer */
+    height: 14vw;
+    max-width: 32px;       /* maximal 32px */
+    max-height: 32px;
+    margin: 2px;           /* zusätzlicher enger Abstand */
+  }
+
+  .dot {
+    width: 10%;            /* Punkte proportional zur Würfelgröße */
+    height: 10%;
+  }
+   
   #info {
     font-size: 0.7rem;
   }
@@ -1241,6 +1241,7 @@ updateInfo();
 </script>
 </body>
 </html>
+
 
 
 
