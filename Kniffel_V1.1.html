@@ -167,36 +167,35 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
   .hs-icon { width:36px; height:36px; font-size:16px; }
   #highscoreTitle { font-size:1.05rem; }
 }
-/* Responsive: Scoreboard unter Spielfeld auf kleinen Screens */
+/* Responsive: Scoreboard bleibt links, Tabelle scrollbar */
 @media (max-width: 768px) {
   #main {
-    flex-direction: column;   /* statt nebeneinander jetzt untereinander */
-    height: auto;             /* volle Höhe automatisch */
-    overflow-x: hidden;       /* verhindert horizontales Scrollen der Seite */
+    flex-direction: row;   /* auch mobil nebeneinander */
+    height: auto;
+    overflow-x: hidden;    /* kein horizontales Scrollen der Seite */
   }
 
   #scoreboard {
-    width: 100%;              /* volle Breite */
-    max-width: none;          /* keine feste Begrenzung */
-    order: -1;                /* Scoreboard nach oben setzen */
-    overflow-x: auto;         /* nur Scoreboard darf horizontal scrollen */
+    width: 40%;            /* nimmt ca. 40% der Breite ein */
+    max-width: none;
+    overflow-x: auto;      /* Tabelle kann scrollen */
   }
 
   #scoreboard table {
-    width: 100%;              /* passt sich der Breite an */
-    min-width: 480px;         /* Mindestbreite für Lesbarkeit */
+    width: 100%;
+    min-width: 300px;      /* Mindestbreite, damit Spalten lesbar bleiben */
   }
 
   #game {
     flex: 1;
-    width: 100%;              /* Spielfeld auch volle Breite */
+    width: 60%;            /* Spielfeld nimmt Rest ein */
   }
 
   body {
-    overflow-x: hidden;       /* verhindert horizontales Scrollen des Body */
+    overflow-x: hidden;
   }
 }
-
+   
 @media (max-width: 480px) {
   .würfel {
     width: 22vw;
@@ -1191,3 +1190,4 @@ updateInfo();
 </script>
 </body>
 </html>
+
