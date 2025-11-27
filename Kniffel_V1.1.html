@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">   
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kniffel Multiplayer 🎲</title>
 <style>
 /* ======================
@@ -50,7 +50,23 @@ button { font-size:16px; padding:10px 20px; margin:5px; cursor:pointer; border:n
 #highscoreButton { background:#9575cd; color:white } #clearHighscoresButton { background:#7b1fa2; color:white }
 
 /* Würfel */
-.würfel { width:80px; height:80px; background:#fff; border-radius:15px; display:flex; justify-content:center; align-items:center; margin:10px; position:relative; cursor:pointer; border:2px solid #333; box-shadow:0 6px 12px rgba(0,0,0,0.5); transition:transform .3s ease; }
+.würfel { 
+  width: 18vw;     /* 18% der Bildschirmbreite */
+  height: 18vw;
+  max-width: 80px; /* nicht größer als 80px */
+  max-height: 80px;
+  background:#fff; 
+  border-radius:15px; 
+  display:flex; 
+  justify-content:center; 
+  align-items:center; 
+  margin:10px; 
+  position:relative; 
+  cursor:pointer; 
+  border:2px solid #333; 
+  box-shadow:0 6px 12px rgba(0,0,0,0.5);
+  transition:transform .3s ease; }
+  
 .würfel:hover { transform:scale(1.05); }
 .würfel.behalten { border:3px solid gold; box-shadow:0 8px 16px rgba(255,215,0,0.7); }
 .dot { width:12px; height:12px; background:#000; border-radius:50%; position:absolute; }
@@ -151,6 +167,31 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
   .hs-icon { width:36px; height:36px; font-size:16px; }
   #highscoreTitle { font-size:1.05rem; }
 }
+/* Responsive: Scoreboard unter Spielfeld auf kleinen Screens */
+@media (max-width: 768px) {
+  #main {
+    flex-direction: column;   /* statt nebeneinander jetzt untereinander */
+    height: auto;             /* volle Höhe automatisch */
+  }
+
+  #scoreboard {
+    width: 100%;              /* volle Breite */
+    max-width: none;          /* keine feste Begrenzung */
+    order: -1;                /* Scoreboard nach oben setzen */
+  }
+
+  #game {
+    flex: 1;
+    width: 100%;              /* Spielfeld auch volle Breite */
+  }
+}
+@media (max-width: 480px) {
+  .würfel {
+    width: 22vw;
+    height: 22vw;
+    max-width: 70px;
+    max-height: 70px;
+  }
 
 
 /* #highscoreList { max-height:300px; overflow-y:auto; margin:10px 0; padding:0; list-style:none; } */
@@ -1138,4 +1179,3 @@ updateInfo();
 </script>
 </body>
 </html>
-
