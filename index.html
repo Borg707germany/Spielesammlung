@@ -5,17 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spielesammlung</title>
     <style>
+        /* ----------------------------
+           Grunddesign
+        ---------------------------- */
         body {
             font-family: Arial, sans-serif;
             background: #f2f2f2;
             padding: 20px;
             overflow-x: hidden;
+            transition: background 0.5s, color 0.5s;
         }
+
         h1 {
             text-align: center;
             position: relative;
             z-index: 10;
         }
+
         .game-list {
             max-width: 400px;
             margin: 0 auto;
@@ -26,6 +32,7 @@
             z-index: 10;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+
         .game-list a {
             display: block;
             padding: 10px;
@@ -36,11 +43,14 @@
             text-decoration: none;
             border-radius: 5px;
         }
+
         .game-list a:hover {
             background: #45a049;
         }
 
-        /* --- Neuer großer Button --- */
+        /* ----------------------------
+           Neuer großer Button
+        ---------------------------- */
         .big-button {
             display: block;
             max-width: 400px;
@@ -58,12 +68,15 @@
             position: relative;
             z-index: 10;
         }
+
         .big-button:hover {
             background: #1e88e5;
             transform: translateY(-2px);
         }
 
-        /* --- Schneeflocken CSS --- */
+        /* ----------------------------
+           Schneeflocken (Winter)
+        ---------------------------- */
         .snowflake {
             position: fixed;
             top: -10px;
@@ -73,7 +86,7 @@
             opacity: 0.9;
             pointer-events: none;
             animation: fall linear infinite;
-            z-index: 1000;
+            z-index: 5;
         }
 
         @keyframes fall {
@@ -83,7 +96,9 @@
             }
         }
 
-        /* --- Sonnenstrahlen --- */
+        /* ----------------------------
+           Sonnenstrahlen (Sommer)
+        ---------------------------- */
         .sunray {
             position: fixed;
             width: 10px;
@@ -93,16 +108,84 @@
             filter: blur(2px);
             animation: shine 2s ease-in-out infinite alternate;
             pointer-events: none;
-            z-index: 1;
+            z-index: 5;
         }
 
         @keyframes shine {
             from { opacity: 0.3; transform: scaleY(0.8); }
-            to   { opacity: 1;   transform: scaleY(1.2); }
+            to   { opacity: 1; transform: scaleY(1.2); }
+        }
+
+        /* ----------------------------
+           Herbstblätter
+        ---------------------------- */
+        .leaf {
+            position: fixed;
+            top: -10px;
+            font-size: 20px;
+            pointer-events: none;
+            animation: leafFall linear infinite;
+            z-index: 5;
+        }
+
+        @keyframes leafFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0.3; }
+        }
+
+        /* ----------------------------
+           Blütenblätter (Frühling)
+        ---------------------------- */
+        .petals {
+            position: fixed;
+            top: -10px;
+            font-size: 20px;
+            color: pink;
+            pointer-events: none;
+            animation: petalFall linear infinite;
+            z-index: 5;
+        }
+
+        @keyframes petalFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* ----------------------------
+           Sterne (Nachtmodus)
+        ---------------------------- */
+        .star {
+            position: fixed;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: twinkle 2s infinite ease-in-out;
+            z-index: 5;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        /* ----------------------------
+           Mond (Nachtmodus)
+        ---------------------------- */
+        .moon {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            width: 60px;
+            height: 60px;
+            background: #f7f7c0;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255,255,200,0.7);
+            z-index: 6;
         }
     </style>
 </head>
-
 <body>
 
     <h1>Meine Spielesammlung</h1>
@@ -110,7 +193,7 @@
     <div class="game-list">
         <a href="Kniffel_V1.1.html">🎲 Kniffel spielen</a>
         <a href="Schach_V1.0.html">♟ Schach spielen</a>
-        <a href="Tetris mit Handysteuerung.html">🧱 Tetris spielen</a>
+        <a href="Tetris_mit_Handysteuerung.html">🧱 Tetris spielen</a>
     </div>
 
     <a class="big-button" href="https://umbassa-long.github.io/wiki-code">
@@ -118,19 +201,104 @@
     </a>
 
     <script>
-        // TEST: Immer Schnee anzeigen – Funktioniert garantiert!
-        setInterval(() => {
-            let snow = document.createElement("div");
-            snow.classList.add("snowflake");
-            snow.innerHTML = "❄";
-            snow.style.left = Math.random() * 100 + "vw";
-            snow.style.fontSize = (14 + Math.random() * 20) + "px";
-            snow.style.animationDuration = (4 + Math.random() * 6) + "s";
+        // ============================
+        // Jahreszeiten + Nachtmodus
+        // ============================
+        const now = new Date();
+        const month = now.getMonth() + 1;
+        const hour = now.getHours();
 
-            document.body.appendChild(snow);
+        // ----------------------------
+        // Nachtmodus (20:00 – 6:00)
+        // ----------------------------
+        if (hour >= 20 || hour <= 6) {
+            document.body.style.background = "#0b0f1a";
+            document.body.style.color = "white";
 
-            setTimeout(() => snow.remove(), 10000);
-        }, 200);
+            // Mond
+            let moon = document.createElement("div");
+            moon.classList.add("moon");
+            document.body.appendChild(moon);
+
+            // Sterne
+            for (let i = 0; i < 60; i++) {
+                let star = document.createElement("div");
+                star.classList.add("star");
+                star.style.left = Math.random() * 100 + "vw";
+                star.style.top = Math.random() * 50 + "vh";
+                document.body.appendChild(star);
+            }
+        }
+
+        // ----------------------------
+        // Winter (Dez–Feb)
+        // ----------------------------
+        if (month === 12 || month === 1 || month === 2) {
+            setInterval(() => {
+                let snow = document.createElement("div");
+                snow.classList.add("snowflake");
+                snow.innerHTML = "❄";
+                snow.style.left = Math.random() * 100 + "vw";
+                snow.style.fontSize = (14 + Math.random() * 20) + "px";
+                snow.style.animationDuration = (4 + Math.random() * 6) + "s";
+
+                document.body.appendChild(snow);
+                setTimeout(() => snow.remove(), 10000);
+            }, 200);
+        }
+
+        // ----------------------------
+        // Frühling (März–Mai)
+        // ----------------------------
+        if (month === 3 || month === 4 || month === 5) {
+            setInterval(() => {
+                let petal = document.createElement("div");
+                petal.classList.add("petals");
+
+                const flowers = ["🌸", "💮", "🌺"];
+                petal.innerHTML = flowers[Math.floor(Math.random() * flowers.length)];
+
+                petal.style.left = Math.random() * 100 + "vw";
+                petal.style.animationDuration = (5 + Math.random() * 5) + "s";
+
+                document.body.appendChild(petal);
+                setTimeout(() => petal.remove(), 12000);
+            }, 300);
+        }
+
+        // ----------------------------
+        // Sommer (Jun–Aug)
+        // ----------------------------
+        if (month === 6 || month === 7 || month === 8) {
+            for (let i = 0; i < 20; i++) {
+                let sun = document.createElement("div");
+                sun.classList.add("sunray");
+                sun.style.left = Math.random() * 100 + "vw";
+                sun.style.top = Math.random() * 50 + "vh";
+                sun.style.transform = "rotate(" + (Math.random() * 180) + "deg)";
+                document.body.appendChild(sun);
+            }
+        }
+
+        // ----------------------------
+        // Herbst (Sep–Nov)
+        // ----------------------------
+        if (month === 9 || month === 10 || month === 11) {
+            setInterval(() => {
+                let leaf = document.createElement("div");
+                leaf.classList.add("leaf");
+
+                const leaves = ["🍁", "🍂", "🍃"];
+                leaf.innerHTML = leaves[Math.floor(Math.random() * leaves.length)];
+
+                leaf.style.left = Math.random() * 100 + "vw";
+                leaf.style.animationDuration = (6 + Math.random() * 4) + "s";
+                leaf.style.fontSize = (18 + Math.random() * 12) + "px";
+
+                document.body.appendChild(leaf);
+                setTimeout(() => leaf.remove(), 12000);
+            }, 350);
+        }
     </script>
 
 </body>
