@@ -9,9 +9,12 @@
             font-family: Arial, sans-serif;
             background: #f2f2f2;
             padding: 20px;
+            overflow-x: hidden;
         }
         h1 {
             text-align: center;
+            position: relative;
+            z-index: 10;
         }
         .game-list {
             max-width: 400px;
@@ -19,6 +22,8 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
+            position: relative;
+            z-index: 10;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         .game-list a {
@@ -35,7 +40,7 @@
             background: #45a049;
         }
 
-        /* --- Neuer Button --- */
+        /* --- Neuer großer Button --- */
         .big-button {
             display: block;
             max-width: 400px;
@@ -50,14 +55,54 @@
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             transition: 0.2s;
+            position: relative;
+            z-index: 10;
         }
-
         .big-button:hover {
             background: #1e88e5;
             transform: translateY(-2px);
         }
+
+        /* --- Schneeflocken CSS --- */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: #a8d8ff;
+            text-shadow: 0 0 4px rgba(0, 140, 255, 0.7);
+            font-size: 14px;
+            opacity: 0.9;
+            pointer-events: none;
+            animation: fall linear infinite;
+            z-index: 1000;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(105vh);
+                opacity: 0.2;
+            }
+        }
+
+        /* --- Sonnenstrahlen --- */
+        .sunray {
+            position: fixed;
+            width: 10px;
+            height: 60px;
+            background: rgba(255, 200, 0, 0.9);
+            border-radius: 4px;
+            filter: blur(2px);
+            animation: shine 2s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        @keyframes shine {
+            from { opacity: 0.3; transform: scaleY(0.8); }
+            to   { opacity: 1;   transform: scaleY(1.2); }
+        }
     </style>
 </head>
+
 <body>
 
     <h1>Meine Spielesammlung</h1>
@@ -68,10 +113,25 @@
         <a href="Tetris mit Handysteuerung.html">🧱 Tetris spielen</a>
     </div>
 
-    <!-- Neuer Button -->
     <a class="big-button" href="https://umbassa-long.github.io/wiki-code">
         ➕ Wissensspeicher von Lars öffnen
     </a>
+
+    <script>
+        // TEST: Immer Schnee anzeigen – Funktioniert garantiert!
+        setInterval(() => {
+            let snow = document.createElement("div");
+            snow.classList.add("snowflake");
+            snow.innerHTML = "❄";
+            snow.style.left = Math.random() * 100 + "vw";
+            snow.style.fontSize = (14 + Math.random() * 20) + "px";
+            snow.style.animationDuration = (4 + Math.random() * 6) + "s";
+
+            document.body.appendChild(snow);
+
+            setTimeout(() => snow.remove(), 10000);
+        }, 200);
+    </script>
 
 </body>
 </html>
