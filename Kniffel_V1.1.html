@@ -286,7 +286,7 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
   <h1>Kniffel Multiplayer 🎲</h1>
   <button id="startButton" type="button">▶️ Spiel starten</button>
   <button id="anleitungButton" type="button">📜 Anleitung</button>
-  <button id="exitButton" type="button">🚪 Beenden</button>
+  <button id="exitButton" type="button">🔙 Spieleauswahl</button>
 </div>
 
 <!-- ======================
@@ -309,7 +309,7 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
       <button id="neuButton" type="button">🔄 Neues Spiel</button>
       <button id="abbrechenButton" type="button">🛑 Spiel abbrechen</button>
       <button id="highscoreButton" type="button">🏆 Highscores</button>
-      <button id="beendenButton" type="button">❌ Beenden</button>
+      <button id="beendenButton" type="button">🔙 Spieleauswahl</button>
     </div>
   </div>
 </div>
@@ -533,7 +533,12 @@ Bonus: Summe 1er-6er ≥63 → +35 Bonuspunkte.`
   );
 }
 if (exitBtn){
-  exitBtn.onclick = ()=> { if (confirm("Möchtest du das Spiel wirklich beenden?")) document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%;color:white;'>👋 Spiel beendet.</h1>"; };
+  exitBtn.onclick = ()=> { 
+    if (confirm("Möchtest du das Spiel wirklich beenden?")) {
+      // Weiterleitung zur Spieleauswahl-Seite
+      window.location.href = "https://borg707germany.github.io/Spielesammlung/";
+    }
+  };
 }
 
 /* ----------------------
@@ -575,9 +580,12 @@ if (abbrechenBtn) abbrechenBtn.onclick = () => {
 };
 
 if (beendenBtn) beendenBtn.onclick = () => {
-  if (confirm("Möchtest du das Spiel wirklich beenden?")) document.body.innerHTML = "<h1 style='text-align:center;margin-top:20%;color:white;'>👋 Spiel beendet.</h1>";
+  if (confirm("Möchtest du das Spiel wirklich beenden?")) {
+    // Weiterleitung zur Spieleauswahl-Seite
+    window.location.href = "https://borg707germany.github.io/Spielesammlung/";
+  }
 };
-
+   
 /* ----------------------
    Highscore Modul v2
    ---------------------- */
@@ -1262,6 +1270,7 @@ updateInfo();
 </script>
 </body>
 </html>
+
 
 
 
