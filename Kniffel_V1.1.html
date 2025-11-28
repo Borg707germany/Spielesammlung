@@ -368,6 +368,14 @@ td.bonus { background:#ffeb3b; color:black; font-weight:bold; }
      SCRIPT: Spiel-Logik & UI
      ====================== -->
 <script>
+// === Pull-to-Refresh auf Mobilgeräten deaktivieren ===
+document.addEventListener('touchmove', function (e) {
+  if (e.touches.length > 1 || e.scale !== 1) return; // Pinch-Zoom erlauben
+  if (window.scrollY === 0 && e.touches[0].clientY > 50) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 /* ----------------------
    Konstanten
    ---------------------- */
@@ -1245,6 +1253,7 @@ updateInfo();
 </script>
 </body>
 </html>
+
 
 
 
