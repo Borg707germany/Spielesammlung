@@ -21,6 +21,10 @@
     padding: 20px;
     background: #f6f6f6;
   }
+  /* Mobile: Overscroll-Refresh blockieren, Scroll weiterhin erlaubt */
+  html, body {
+    overscroll-behavior-y: contain;
+  }
 
   /* -------------------------
      Start- & Setup-Screens
@@ -254,6 +258,9 @@
     font-family: 'Courier New', monospace;
     max-height: 520px;
     overflow-y: auto;
+    
+    /* Pull-to-Refresh innerhalb der Liste vermeiden */
+    overscroll-behavior-y: contain;
   }
 
   #log strong { font-size: 1.2em; color: #3e2723; display:block; margin-bottom:8px; }
@@ -1910,3 +1917,4 @@ window.addEventListener('resize', () => { setTimeout(syncRanksToBoard, 80); });
 </script>
 </body>
 </html>
+
