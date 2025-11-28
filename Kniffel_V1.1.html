@@ -9,7 +9,11 @@
    Layout & Grundstil
    ====================== */
 body { font-family: Arial, sans-serif; background:#1b5e20; color:white; margin:0; overscroll-behavior-y: contain; /* verhindert Pull-to-Refresh */}
-
+html, body {
+  overscroll-behavior-y: none;   /* verhindert Pull-to-Refresh */
+  overscroll-behavior-x: none;
+}
+   
 /* Startscreen */
 #startScreen { position:fixed; inset:0; background:linear-gradient(160deg,#2e7d32,#1b5e20); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:100; }
 #startScreen h1 { font-size:48px; margin-bottom:40px; text-shadow:2px 2px 5px rgba(0,0,0,0.5); }
@@ -375,7 +379,7 @@ document.addEventListener('touchmove', function (e) {
     e.preventDefault();
   }
 }, { passive: false });
-
+   
 /* ----------------------
    Konstanten
    ---------------------- */
@@ -1239,9 +1243,14 @@ alert(statistik);
 
   return;
 }
+// Verhindert versehentliches Reload während eines laufenden Spiels
+window.addEventListener('beforeunload', function (e) {
+  if (!game.gameOver) {
+    e.preventDefault();
+    e.returnValue = ''; // zeigt Standard-Warnung an
+  }
+});
 
-
-  
 }
 
 /* ----------------------
@@ -1253,6 +1262,7 @@ updateInfo();
 </script>
 </body>
 </html>
+
 
 
 
